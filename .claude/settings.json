@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(expo *)",
+      "Bash(git *)",
+      "Bash(node *)",
+      "Bash(pod install)",
+      "Bash(pod *)"
+    ]
+  }
+}
