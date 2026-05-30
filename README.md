@@ -33,6 +33,32 @@ Metro が起動済みの場合は `a` キーを押しても Android 向けにビ
 | Android エミュレーター | Android Studio の AVD Manager から停止、または `×` で閉じる |
 | 実機アプリ | ホームボタンで戻るだけでOK（次回 `npm run android` で再インストール） |
 
+`npm run android` を実行すると Gradle デーモンがバックグラウンドで残り続ける。不要な場合は以下の手順で停止する。
+
+**Step 1: プロジェクトの Gradle デーモンを止める**
+
+```sh
+cd android && ./gradlew --stop
+```
+
+**Step 2: 残存デーモンを確認する**
+
+```sh
+jps -l
+```
+
+`GradleDaemon` が表示されていれば残っている。
+
+**Step 3: 残っている場合は PowerShell で一括終了**
+
+```powershell
+Get-WmiObject Win32_Process |
+  Where-Object { $_.Name -like "*java*" -and $_.CommandLine -like "*GradleDaemon*" } |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
+> VSCode の Java 拡張（Language Server など）は `GradleDaemon` を含まないため、上記コマンドでは終了されない。
+
 ---
 
 ## 開発中によく使うコマンド
