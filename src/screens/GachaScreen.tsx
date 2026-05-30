@@ -12,7 +12,8 @@ import { PixelBorder } from '../components/common/PixelBorder';
 import { GuildButton } from '../components/common/GuildButton';
 import { RarityBadge } from '../components/common/RarityBadge';
 import { Colors, Fonts, Spacing } from '../constants/theme';
-import { Item } from '../types';
+import { Item, GuildRank } from '../types';
+import { GACHA_RATES_BY_RANK, RANK_ORDER } from '../constants/gameData';
 
 const GACHA_COST = 100;
 
@@ -25,21 +26,17 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function GachaScreen() {
   const character = useCharacterStore(s => s.character);
-  const consumeGacha = useCharacterStore(s => s.useGacha);
   const spendGold = useCharacterStore(s => s.spendGold);
   const rollGachaFn = useInventoryStore(s => s.rollGacha);
 
   const [lastResult, setLastResult] = useState<Item | null>(null);
   const [isRolling, setIsRolling] = useState(false);
 
-  const gachaRemaining = character.maxDailyGacha - character.dailyGachaUsed;
-  const canRoll = gachaRemaining > 0 && character.gold >= GACHA_COST;
+  const canRoll = character.gold >= GACHA_COST;
+  const rates = GACHA_RATES_BY_RANK[character.guildRank];
+  const commonRate = 100 - rates.legendary - rates.epic - rates.rare;
 
   const handleRoll = () => {
-    if (gachaRemaining <= 0) {
-      Alert.alert('本日分終了', '本日のガチャ回数を使い切りました。明日またどうぞ！');
-      return;
-    }
     if (character.gold < GACHA_COST) {
       Alert.alert('Goldが足りない', `ガチャには${GACHA_COST}Gが必要です。\nクエストを達成してGoldを稼ごう！`);
       return;
@@ -48,12 +45,9 @@ export function GachaScreen() {
     const consumed = spendGold(GACHA_COST);
     if (!consumed) return;
 
-    const used = consumeGacha();
-    if (!used) return;
-
     setIsRolling(true);
     setTimeout(() => {
-      const item = rollGachaFn();
+      const item = rollGachaFn(character.guildRank);
       setLastResult(item);
       setIsRolling(false);
     }, 600);
@@ -66,6 +60,13 @@ export function GachaScreen() {
     legendary: Colors.rarityLegendary,
   };
 
+  const rateRows = [
+    { label: 'LEGENDARY', rate: `${rates.legendary}%`, pct: rates.legendary, color: Colors.rarityLegendary },
+    { label: 'EPIC', rate: `${rates.epic}%`, pct: rates.epic, color: Colors.rarityEpic },
+    { label: 'RARE', rate: `${rates.rare}%`, pct: rates.rare, color: Colors.rarityRare },
+    { label: 'COMMON', rate: `${commonRate}%`, pct: commonRate, color: Colors.rarityCommon },
+  ];
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.header}>【 ガチャ 】</Text>
@@ -75,9 +76,9 @@ export function GachaScreen() {
       <PixelBorder style={styles.infoCard} color={Colors.purple}>
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>残り回数</Text>
-            <Text style={[styles.infoValue, { color: gachaRemaining > 0 ? Colors.purple : Colors.textDim }]}>
-              {gachaRemaining} / {character.maxDailyGacha}
+            <Text style={styles.infoLabel}>ギルドランク</Text>
+            <Text style={[styles.infoValue, { color: Colors.purple }]}>
+              {character.guildRank}ランク
             </Text>
           </View>
           <View style={styles.infoItem}>
@@ -92,7 +93,7 @@ export function GachaScreen() {
           </View>
         </View>
         <Text style={styles.infoNote}>
-          ※ ガチャ回数はレベルアップで増加。毎日リセットされます。
+          ※ ランクが上がるほど高レアリティの排出率がアップ！
         </Text>
       </PixelBorder>
 
@@ -142,23 +143,33 @@ export function GachaScreen() {
         />
       </PixelBorder>
 
-      {/* Rarity Rates */}
+      {/* Rank Rate Table */}
       <PixelBorder style={styles.ratesCard} color={Colors.borderDim}>
-        <Text style={styles.ratesTitle}>排出率</Text>
-        {[
-          { label: 'LEGENDARY', rate: '2%', pct: 2, color: Colors.rarityLegendary },
-          { label: 'EPIC', rate: '10%', pct: 10, color: Colors.rarityEpic },
-          { label: 'RARE', rate: '28%', pct: 28, color: Colors.rarityRare },
-          { label: 'COMMON', rate: '60%', pct: 60, color: Colors.rarityCommon },
-        ].map(r => (
+        <Text style={styles.ratesTitle}>現在の排出率 ({character.guildRank}ランク)</Text>
+        {rateRows.map(r => (
           <View key={r.label} style={styles.rateRow}>
             <Text style={[styles.rateLabel, { color: r.color }]}>{r.label}</Text>
             <View style={styles.rateBarBg}>
-              <View style={[styles.rateBar, { width: `${r.pct}%` as `${number}%`, backgroundColor: r.color }]} />
+              <View style={[styles.rateBar, { width: `${Math.min(r.pct, 100)}%` as `${number}%`, backgroundColor: r.color }]} />
             </View>
             <Text style={[styles.rateValue, { color: r.color }]}>{r.rate}</Text>
           </View>
         ))}
+        <Text style={styles.rankNote}>ランク別の排出率:</Text>
+        {RANK_ORDER.map(rank => {
+          const r = GACHA_RATES_BY_RANK[rank as GuildRank];
+          const isCurrentRank = rank === character.guildRank;
+          return (
+            <View key={rank} style={[styles.rankRateRow, isCurrentRank && styles.rankRateRowActive]}>
+              <Text style={[styles.rankRateRank, isCurrentRank && { color: Colors.gold }]}>
+                {rank}
+              </Text>
+              <Text style={[styles.rankRateText, isCurrentRank && { color: Colors.text }]}>
+                L:{r.legendary}% E:{r.epic}% R:{r.rare}% C:{100 - r.legendary - r.epic - r.rare}%
+              </Text>
+            </View>
+          );
+        })}
       </PixelBorder>
     </ScrollView>
   );
@@ -297,8 +308,39 @@ const styles = StyleSheet.create({
   rateValue: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    width: 32,
+    width: 36,
     textAlign: 'right',
     fontWeight: 'bold',
+  },
+  rankNote: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.xs,
+    color: Colors.textDim,
+    marginTop: Spacing.sm,
+  },
+  rankRateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 2,
+    paddingHorizontal: Spacing.xs,
+  },
+  rankRateRowActive: {
+    backgroundColor: Colors.gold + '22',
+    borderWidth: 1,
+    borderColor: Colors.gold + '44',
+  },
+  rankRateRank: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.xs,
+    color: Colors.textDim,
+    width: 16,
+    fontWeight: 'bold',
+  },
+  rankRateText: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.xs,
+    color: Colors.textDim,
+    flex: 1,
   },
 });

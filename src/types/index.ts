@@ -8,6 +8,8 @@ export interface Quest {
   id: string;
   title: string;
   description: string;
+  conditions?: string;
+  deadline?: number;
   difficulty: QuestDifficulty;
   reward: {
     exp: number;
@@ -28,9 +30,6 @@ export interface Character {
   guildRank: GuildRank;
   title: string;
   completedQuests: number;
-  maxDailyGacha: number;
-  dailyGachaUsed: number;
-  lastGachaReset: number;
 }
 
 export interface Item {

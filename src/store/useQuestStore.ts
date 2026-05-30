@@ -44,7 +44,7 @@ interface QuestStore {
   isLoaded: boolean;
   load: () => Promise<void>;
   save: (quests: Quest[]) => Promise<void>;
-  addQuest: (title: string, description: string, difficulty: QuestDifficulty) => void;
+  addQuest: (title: string, description: string, difficulty: QuestDifficulty, conditions?: string, deadline?: number) => void;
   acceptQuest: (id: string) => void;
   completeQuest: (id: string) => { exp: number; gold: number } | null;
   abandonQuest: (id: string) => void;
@@ -78,12 +78,14 @@ export const useQuestStore = create<QuestStore>((set, get) => ({
     } catch {}
   },
 
-  addQuest: (title, description, difficulty) => {
+  addQuest: (title, description, difficulty, conditions, deadline) => {
     const { quests, save } = get();
     const quest: Quest = {
       id: generateId(),
       title,
       description,
+      conditions,
+      deadline,
       difficulty,
       reward: { exp: DIFFICULTY_EXP[difficulty], gold: DIFFICULTY_GOLD[difficulty] },
       status: 'available',

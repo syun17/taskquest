@@ -15,7 +15,7 @@ import { ExpBar } from '../components/common/ExpBar';
 import { RarityBadge } from '../components/common/RarityBadge';
 import { GuildButton } from '../components/common/GuildButton';
 import { Colors, Fonts, Spacing } from '../constants/theme';
-import { Item } from '../types';
+import { Item, ItemRarity } from '../types';
 
 const TYPE_LABELS: Record<string, string> = {
   weapon: '武器',
@@ -24,17 +24,54 @@ const TYPE_LABELS: Record<string, string> = {
   consumable: '消耗品',
 };
 
+const RARITY_LABELS: Record<ItemRarity, string> = {
+  common: 'COMMON',
+  rare: 'RARE',
+  epic: 'EPIC',
+  legendary: 'LEGENDARY',
+};
+
+const RARITY_NEXT: Partial<Record<ItemRarity, ItemRarity>> = {
+  common: 'rare',
+  rare: 'epic',
+  epic: 'legendary',
+};
+
+interface SynthesisGroup {
+  itemName: string;
+  rarity: ItemRarity;
+  count: number;
+  type: string;
+}
+
 export function CharacterScreen() {
   const character = useCharacterStore(s => s.character);
   const items = useInventoryStore(s => s.items);
   const equipItem = useInventoryStore(s => s.equipItem);
   const unequipItem = useInventoryStore(s => s.unequipItem);
   const sellItem = useInventoryStore(s => s.sellItem);
+  const synthesizeItems = useInventoryStore(s => s.synthesizeItems);
   const gainGold = useCharacterStore(s => s.gainGold);
   const totalAttack = items.filter(i => i.equipped).reduce((sum, i) => sum + (i.attack ?? 0), 0);
   const totalDefense = items.filter(i => i.equipped).reduce((sum, i) => sum + (i.defense ?? 0), 0);
 
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+
+  // 合成可能グループを計算 (same name + rarity, count >= 4, not legendary)
+  const synthesisGroups: SynthesisGroup[] = React.useMemo(() => {
+    const groupMap = new Map<string, SynthesisGroup>();
+    for (const item of items) {
+      if (item.rarity === 'legendary') continue;
+      const key = `${item.name}__${item.rarity}`;
+      const existing = groupMap.get(key);
+      if (existing) {
+        existing.count++;
+      } else {
+        groupMap.set(key, { itemName: item.name, rarity: item.rarity, count: 1, type: item.type });
+      }
+    }
+    return Array.from(groupMap.values()).filter(g => g.count >= 4);
+  }, [items]);
 
   const handleSell = (item: Item) => {
     if (item.equipped) {
@@ -57,6 +94,32 @@ export function CharacterScreen() {
             gainGold(gold);
             setSelectedItem(null);
             Alert.alert('売却完了', `${gold}G を入手した！`);
+          },
+        },
+      ],
+    );
+  };
+
+  const handleSynthesize = (group: SynthesisGroup) => {
+    const nextRarity = RARITY_NEXT[group.rarity];
+    if (!nextRarity) return;
+    Alert.alert(
+      '装備合成',
+      `「${group.itemName}」(${RARITY_LABELS[group.rarity]}) を4個合成して\n${RARITY_LABELS[nextRarity]}アイテムを作成しますか？`,
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '合成する',
+          onPress: () => {
+            const result = synthesizeItems(group.itemName, group.rarity);
+            if (result) {
+              Alert.alert(
+                '合成成功！',
+                `${RARITY_LABELS[result.rarity]} 「${result.name}」 を入手した！`,
+              );
+            } else {
+              Alert.alert('合成失敗', '合成できませんでした');
+            }
           },
         },
       ],
@@ -125,6 +188,41 @@ export function CharacterScreen() {
             </TouchableOpacity>
           ))}
         </View>
+      )}
+
+      {/* Synthesis */}
+      {synthesisGroups.length > 0 && (
+        <>
+          <Text style={styles.sectionHeader}>【 装備合成 】</Text>
+          <PixelBorder color={Colors.purple} style={styles.synthesisCard}>
+            <Text style={styles.synthesisNote}>
+              同じ装備を4個合成してレアリティアップ！
+            </Text>
+            {synthesisGroups.map(group => {
+              const nextRarity = RARITY_NEXT[group.rarity];
+              return (
+                <View key={`${group.itemName}__${group.rarity}`} style={styles.synthesisRow}>
+                  <View style={styles.synthesisInfo}>
+                    <RarityBadge rarity={group.rarity} />
+                    <View style={styles.synthesisTextBlock}>
+                      <Text style={styles.synthesisItemName}>{group.itemName}</Text>
+                      <Text style={styles.synthesisCount}>
+                        {group.count}個所持 → {nextRarity ? RARITY_LABELS[nextRarity] : ''}へ
+                      </Text>
+                    </View>
+                  </View>
+                  <GuildButton
+                    label="合成"
+                    variant="primary"
+                    onPress={() => handleSynthesize(group)}
+                    style={styles.synthesisBtn}
+                    disabled={group.count < 4}
+                  />
+                </View>
+              );
+            })}
+          </PixelBorder>
+        </>
       )}
 
       {/* Item Detail Modal */}
@@ -308,6 +406,45 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.xs,
     color: Colors.gold,
     fontWeight: 'bold',
+  },
+  synthesisCard: { gap: Spacing.sm },
+  synthesisNote: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.xs,
+    color: Colors.purple,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+  synthesisRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderDim,
+  },
+  synthesisInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  synthesisTextBlock: { flex: 1, gap: 2 },
+  synthesisItemName: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.sm,
+    color: Colors.text,
+    fontWeight: 'bold',
+  },
+  synthesisCount: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.xs,
+    color: Colors.textDim,
+  },
+  synthesisBtn: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
   },
   modalBg: {
     flex: 1,

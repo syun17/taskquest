@@ -52,13 +52,15 @@ export function getRankForLevel(level: number): GuildRank {
   return 'F';
 }
 
-export function getMaxDailyGacha(level: number): number {
-  if (level >= 30) return 5;
-  if (level >= 20) return 4;
-  if (level >= 10) return 3;
-  if (level >= 5) return 2;
-  return 1;
-}
+export const GACHA_RATES_BY_RANK: Record<GuildRank, { legendary: number; epic: number; rare: number }> = {
+  F: { legendary: 2, epic: 10, rare: 28 },
+  E: { legendary: 2, epic: 10, rare: 28 },
+  D: { legendary: 3, epic: 14, rare: 38 },
+  C: { legendary: 3, epic: 14, rare: 38 },
+  B: { legendary: 8, epic: 24, rare: 38 },
+  A: { legendary: 8, epic: 24, rare: 38 },
+  S: { legendary: 15, epic: 35, rare: 35 },
+};
 
 export const DIFFICULTY_EXP: Record<QuestDifficulty, number> = {
   F: 20,

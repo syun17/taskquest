@@ -1,21 +1,23 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Item, ItemRarity } from '../types';
-import { GACHA_ITEMS } from '../constants/gameData';
+import { Item, ItemRarity, GuildRank } from '../types';
+import { GACHA_ITEMS, GACHA_RATES_BY_RANK } from '../constants/gameData';
 
 const STORAGE_KEY = '@taskquest_inventory';
+
+const RARITY_ORDER: ItemRarity[] = ['common', 'rare', 'epic', 'legendary'];
 
 function generateId(): string {
   return `item_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 }
 
-function rollGacha(): Omit<Item, 'id' | 'equipped' | 'obtainedAt'> {
-  // Rarity weights: common 60%, rare 28%, epic 10%, legendary 2%
+function rollGachaItem(rank: GuildRank): Omit<Item, 'id' | 'equipped' | 'obtainedAt'> {
+  const rates = GACHA_RATES_BY_RANK[rank];
   const roll = Math.random() * 100;
   let rarity: ItemRarity;
-  if (roll < 2) rarity = 'legendary';
-  else if (roll < 12) rarity = 'epic';
-  else if (roll < 40) rarity = 'rare';
+  if (roll < rates.legendary) rarity = 'legendary';
+  else if (roll < rates.legendary + rates.epic) rarity = 'epic';
+  else if (roll < rates.legendary + rates.epic + rates.rare) rarity = 'rare';
   else rarity = 'common';
 
   const pool = GACHA_ITEMS.filter(i => i.rarity === rarity);
@@ -28,10 +30,11 @@ interface InventoryStore {
   isLoaded: boolean;
   load: () => Promise<void>;
   save: (items: Item[]) => Promise<void>;
-  rollGacha: () => Item;
+  rollGacha: (rank: GuildRank) => Item;
   equipItem: (id: string) => void;
   unequipItem: (id: string) => void;
   sellItem: (id: string) => number;
+  synthesizeItems: (itemName: string, rarity: ItemRarity) => Item | null;
   getTotalAttack: () => number;
   getTotalDefense: () => number;
 }
@@ -59,9 +62,9 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
     } catch {}
   },
 
-  rollGacha: (): Item => {
+  rollGacha: (rank: GuildRank): Item => {
     const { items, save } = get();
-    const base = rollGacha();
+    const base = rollGachaItem(rank);
     const newItem: Item = {
       ...base,
       id: generateId(),
@@ -111,6 +114,42 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
     set({ items: updated });
     save(updated);
     return price;
+  },
+
+  synthesizeItems: (itemName: string, rarity: ItemRarity): Item | null => {
+    const { items, save } = get();
+    const rarityIndex = RARITY_ORDER.indexOf(rarity);
+    if (rarityIndex === RARITY_ORDER.length - 1) return null; // legendary は合成不可
+
+    const targets = items.filter(i => i.name === itemName && i.rarity === rarity && !i.equipped);
+    if (targets.length < 4) return null;
+
+    const nextRarity = RARITY_ORDER[rarityIndex + 1];
+    const targetItem = targets[0];
+    const pool = GACHA_ITEMS.filter(i => i.type === targetItem.type && i.rarity === nextRarity);
+    if (pool.length === 0) return null;
+
+    const base = pool[Math.floor(Math.random() * pool.length)];
+    const newItem: Item = {
+      ...base,
+      id: generateId(),
+      equipped: false,
+      obtainedAt: Date.now(),
+    };
+
+    // 対象アイテムを4個削除して新アイテムを追加
+    let removed = 0;
+    const updated = items.filter(i => {
+      if (i.name === itemName && i.rarity === rarity && !i.equipped && removed < 4) {
+        removed++;
+        return false;
+      }
+      return true;
+    });
+    updated.push(newItem);
+    set({ items: updated });
+    save(updated);
+    return newItem;
   },
 
   getTotalAttack: () => {

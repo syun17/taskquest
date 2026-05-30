@@ -17,8 +17,6 @@ export function HomeScreen() {
   const totalAttack = items.filter(i => i.equipped).reduce((sum, i) => sum + (i.attack ?? 0), 0);
   const totalDefense = items.filter(i => i.equipped).reduce((sum, i) => sum + (i.defense ?? 0), 0);
 
-  const gachaRemaining = character.maxDailyGacha - character.dailyGachaUsed;
-
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.header}>【 ギルドホーム 】</Text>
@@ -70,9 +68,9 @@ export function HomeScreen() {
             </Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statLabel}>GACHA</Text>
+            <Text style={styles.statLabel}>RANK</Text>
             <Text style={[styles.statValue, { color: Colors.purple }]}>
-              残{gachaRemaining}回
+              {character.guildRank}
             </Text>
           </View>
         </View>

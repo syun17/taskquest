@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Character } from '../types';
-import { getExpToNext, getRankForLevel, getMaxDailyGacha, GUILD_RANK_NAMES } from '../constants/gameData';
+import { getExpToNext, getRankForLevel, GUILD_RANK_NAMES } from '../constants/gameData';
 
 const STORAGE_KEY = '@taskquest_character';
 
@@ -14,9 +14,6 @@ const initialCharacter: Character = {
   guildRank: 'F',
   title: '見習い冒険者',
   completedQuests: 0,
-  maxDailyGacha: 1,
-  dailyGachaUsed: 0,
-  lastGachaReset: Date.now(),
 };
 
 interface CharacterStore {
@@ -27,7 +24,6 @@ interface CharacterStore {
   gainExp: (amount: number) => void;
   gainGold: (amount: number) => void;
   spendGold: (amount: number) => boolean;
-  useGacha: () => boolean;
   setName: (name: string) => void;
 }
 
@@ -40,14 +36,6 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved: Character = JSON.parse(raw);
-        // Reset daily gacha if it's a new day
-        const now = Date.now();
-        const lastReset = new Date(saved.lastGachaReset);
-        const today = new Date(now);
-        if (lastReset.toDateString() !== today.toDateString()) {
-          saved.dailyGachaUsed = 0;
-          saved.lastGachaReset = now;
-        }
         set({ character: saved, isLoaded: true });
       } else {
         set({ isLoaded: true });
@@ -86,7 +74,6 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       expToNext: getExpToNext(level),
       guildRank: newRank,
       title: GUILD_RANK_NAMES[newRank],
-      maxDailyGacha: getMaxDailyGacha(level),
     };
     set({ character: updated });
     save(updated);
@@ -103,15 +90,6 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     const { character, save } = get();
     if (character.gold < amount) return false;
     const updated = { ...character, gold: character.gold - amount };
-    set({ character: updated });
-    save(updated);
-    return true;
-  },
-
-  useGacha: (): boolean => {
-    const { character, save } = get();
-    if (character.dailyGachaUsed >= character.maxDailyGacha) return false;
-    const updated = { ...character, dailyGachaUsed: character.dailyGachaUsed + 1 };
     set({ character: updated });
     save(updated);
     return true;
