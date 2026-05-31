@@ -44,7 +44,7 @@ interface QuestStore {
   isLoaded: boolean;
   load: () => Promise<void>;
   save: (quests: Quest[]) => Promise<void>;
-  addQuest: (title: string, description: string, difficulty: QuestDifficulty, conditions?: string, deadline?: number) => void;
+  addQuest: (title: string, description: string, difficulty: QuestDifficulty, conditions?: string, deadline?: string) => void;
   acceptQuest: (id: string) => void;
   completeQuest: (id: string) => { exp: number; gold: number } | null;
   abandonQuest: (id: string) => void;

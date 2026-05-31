@@ -9,7 +9,7 @@ export interface Quest {
   title: string;
   description: string;
   conditions?: string;
-  deadline?: number;
+  deadline?: string;
   difficulty: QuestDifficulty;
   reward: {
     exp: number;
