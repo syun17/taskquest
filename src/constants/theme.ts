@@ -4,46 +4,45 @@ export const Colors = {
   bgSecondary: '#0f0f20',
   bgCard: '#101028',
 
-  // Borders
-  border: '#ff3355',          // vivid red-pink accent
-  borderDim: '#4433aa',       // muted purple
-  borderHighlight: '#ff88aa', // light pink highlight
+  // Borders - blue accent
+  border: '#3a6bb8',
+  borderDim: '#1e3355',
+  borderHighlight: '#5588cc',
 
   // Pixel shadow
   shadowDark: '#000000',
 
   // Gold
-  gold: '#ffdd00',
-  goldDim: '#aa8800',
+  gold: '#c8a030',
+  goldDim: '#7a6018',
 
   // Text
   text: '#ffffff',
-  textDim: '#7777aa',
+  textDim: '#8888aa',
   textDark: '#000000',
   white: '#ffffff',
 
-  // Status colors - vivid retro palette
-  green: '#00ee44',
-  red: '#ff2244',
-  blue: '#4488ff',
-  purple: '#cc44ff',
-  orange: '#ff8800',
-  cyan: '#00ffcc',
+  // Status colors - muted, reduced palette
+  green: '#44aa55',
+  red: '#cc3344',
+  blue: '#4477cc',
+  purple: '#7755aa',
+  orange: '#b87830',
 
-  // Rarity colors
-  rarityCommon: '#aaaaaa',
-  rarityRare: '#4488ff',
-  rarityEpic: '#cc44ff',
-  rarityLegendary: '#ff8800',
+  // Rarity colors - same 4 semantic colors
+  rarityCommon: '#888888',
+  rarityRare: '#4477cc',
+  rarityEpic: '#7755aa',
+  rarityLegendary: '#c8a030',
 
-  // Difficulty colors
-  diffF: '#888888',
-  diffE: '#00ee44',
-  diffD: '#4488ff',
-  diffC: '#ff8800',
-  diffB: '#ff2244',
-  diffA: '#cc44ff',
-  diffS: '#ffdd00',
+  // Difficulty colors - natural gradient F(gray)→S(gold)
+  diffF: '#555566',
+  diffE: '#44aa55',
+  diffD: '#4477cc',
+  diffC: '#b87830',
+  diffB: '#cc3344',
+  diffA: '#7755aa',
+  diffS: '#c8a030',
 };
 
 export const Fonts = {
