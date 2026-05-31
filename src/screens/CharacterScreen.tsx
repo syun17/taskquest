@@ -16,6 +16,7 @@ import { RarityBadge } from '../components/common/RarityBadge';
 import { GuildButton } from '../components/common/GuildButton';
 import { Colors, Fonts, Spacing } from '../constants/theme';
 import { Item, ItemRarity } from '../types';
+import { calculatePlayerStats } from '../utils/battleCalculator';
 
 const TYPE_LABELS: Record<string, string> = {
   weapon: '武器',
@@ -54,6 +55,7 @@ export function CharacterScreen() {
   const gainGold = useCharacterStore(s => s.gainGold);
   const totalAttack = items.filter(i => i.equipped).reduce((sum, i) => sum + (i.attack ?? 0), 0);
   const totalDefense = items.filter(i => i.equipped).reduce((sum, i) => sum + (i.defense ?? 0), 0);
+  const battleStats = calculatePlayerStats(character.level, totalAttack, totalDefense);
 
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
@@ -151,12 +153,24 @@ export function CharacterScreen() {
           level={character.level}
         />
 
+        <View style={styles.goldQuestRow}>
+          <View style={styles.infoChip}>
+            <Text style={styles.infoChipLabel}>GOLD</Text>
+            <Text style={[styles.infoChipValue, { color: Colors.gold }]}>{character.gold.toLocaleString()}G</Text>
+          </View>
+          <View style={styles.infoChip}>
+            <Text style={styles.infoChipLabel}>QUEST</Text>
+            <Text style={styles.infoChipValue}>{character.completedQuests}件</Text>
+          </View>
+        </View>
+
+        <Text style={styles.statsTitle}>◆ BATTLE STATUS ◆</Text>
         <View style={styles.statsGrid}>
           {[
-            { label: 'GOLD', value: `${character.gold.toLocaleString()}G`, color: Colors.gold },
-            { label: 'ATK', value: String(totalAttack), color: Colors.red },
-            { label: 'DEF', value: String(totalDefense), color: Colors.blue },
-            { label: 'QUEST', value: `${character.completedQuests}件`, color: Colors.text },
+            { label: 'HP', value: String(battleStats.maxHp), color: Colors.green },
+            { label: 'ATK', value: String(battleStats.attack), color: Colors.red },
+            { label: 'DEF', value: String(battleStats.defense), color: Colors.blue },
+            { label: 'SPD', value: String(battleStats.speed), color: Colors.gold },
           ].map(stat => (
             <View key={stat.label} style={styles.statBox}>
               <Text style={styles.statLabel}>{stat.label}</Text>
@@ -326,6 +340,38 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
     color: Colors.textDim,
+  },
+  goldQuestRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  infoChip: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.bgSecondary,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  infoChipLabel: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.xs,
+    color: Colors.textDim,
+    letterSpacing: 1,
+  },
+  infoChipValue: {
+    fontFamily: Fonts.monoBold,
+    fontSize: Fonts.size.sm,
+    color: Colors.text,
+  },
+  statsTitle: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.xs,
+    color: Colors.textDim,
+    textAlign: 'center',
+    letterSpacing: 2,
+    marginTop: Spacing.xs,
   },
   statsGrid: {
     flexDirection: 'row',
