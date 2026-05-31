@@ -26,6 +26,7 @@ interface CharacterStore {
   spendGold: (amount: number) => boolean;
   setName: (name: string) => void;
   setTitle: (title: string) => void;
+  incrementCompletedQuests: () => void;
 }
 
 export const useCharacterStore = create<CharacterStore>((set, get) => ({
@@ -36,8 +37,16 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const saved: Character = JSON.parse(raw);
-        set({ character: saved, isLoaded: true });
+        const saved = JSON.parse(raw);
+        // 旧バージョンのデータとのマージ: 存在しないフィールドは initialCharacter の値で補完
+        const character: Character = {
+          ...initialCharacter,
+          ...saved,
+          completedQuests: typeof saved.completedQuests === 'number' && !isNaN(saved.completedQuests)
+            ? saved.completedQuests
+            : 0,
+        };
+        set({ character, isLoaded: true });
       } else {
         set({ isLoaded: true });
       }
@@ -106,6 +115,13 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
   setTitle: (title: string) => {
     const { character, save } = get();
     const updated = { ...character, title };
+    set({ character: updated });
+    save(updated);
+  },
+
+  incrementCompletedQuests: () => {
+    const { character, save } = get();
+    const updated = { ...character, completedQuests: character.completedQuests + 1 };
     set({ character: updated });
     save(updated);
   },
