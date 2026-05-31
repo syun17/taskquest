@@ -20,23 +20,6 @@ import { DIFFICULTY_EXP, DIFFICULTY_GOLD } from '../constants/gameData';
 
 const DIFFICULTIES: QuestDifficulty[] = ['F', 'E', 'D', 'C', 'B', 'A', 'S'];
 
-function parseDeadline(input: string): number | undefined {
-  if (!input.trim()) return undefined;
-  const parts = input.trim().split(/[\/\-]/);
-  if (parts.length !== 3) return undefined;
-  const [y, m, d] = parts.map(Number);
-  const date = new Date(y, m - 1, d, 23, 59, 59);
-  if (isNaN(date.getTime())) return undefined;
-  return date.getTime();
-}
-
-function formatDeadline(ts: number): string {
-  const d = new Date(ts);
-  const now = Date.now();
-  const expired = ts < now;
-  const str = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
-  return expired ? `${str} (期限切れ)` : str;
-}
 
 export function QuestBoardScreen() {
   const quests = useQuestStore(s => s.quests);
@@ -75,12 +58,7 @@ export function QuestBoardScreen() {
       Alert.alert('エラー', 'クエスト名を入力してください');
       return;
     }
-    const deadline = parseDeadline(deadlineInput);
-    if (deadlineInput.trim() && deadline === undefined) {
-      Alert.alert('エラー', '期限の形式が正しくありません\n例: 2026/12/31');
-      return;
-    }
-    addQuest(title.trim(), description.trim(), difficulty, conditions.trim() || undefined, deadline);
+    addQuest(title.trim(), description.trim(), difficulty, conditions.trim() || undefined, deadlineInput.trim() || undefined);
     setTitle('');
     setDescription('');
     setConditions('');
@@ -129,11 +107,8 @@ export function QuestBoardScreen() {
                 </Text>
               ) : null}
               {item.deadline ? (
-                <Text style={[
-                  styles.questDeadline,
-                  item.deadline < Date.now() && { color: Colors.red },
-                ]}>
-                  ⏰ 期限: {formatDeadline(item.deadline)}
+                <Text style={styles.questDeadline}>
+                  ⏰ 期限: {item.deadline}
                 </Text>
               ) : null}
               <View style={styles.questFooter}>
@@ -238,10 +213,8 @@ export function QuestBoardScreen() {
                 style={styles.input}
                 value={deadlineInput}
                 onChangeText={setDeadlineInput}
-                placeholder="例: 2026/12/31"
+                placeholder="例: 2026/12/31 または「来週中」など"
                 placeholderTextColor={Colors.textDim}
-                maxLength={10}
-                keyboardType="numeric"
               />
 
               <View style={styles.modalActions}>
