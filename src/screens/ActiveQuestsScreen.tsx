@@ -24,8 +24,7 @@ export function ActiveQuestsScreen() {
   const abandonQuest = useQuestStore(s => s.abandonQuest);
   const gainExp = useCharacterStore(s => s.gainExp);
   const gainGold = useCharacterStore(s => s.gainGold);
-  const character = useCharacterStore(s => s.character);
-  const save = useCharacterStore(s => s.save);
+  const incrementCompletedQuests = useCharacterStore(s => s.incrementCompletedQuests);
 
   const handleComplete = (quest: Quest) => {
     Alert.alert(
@@ -40,8 +39,7 @@ export function ActiveQuestsScreen() {
             if (reward) {
               gainExp(reward.exp);
               gainGold(reward.gold);
-              const updated = { ...character, completedQuests: character.completedQuests + 1 };
-              save(updated);
+              incrementCompletedQuests();
               Alert.alert(
                 '✨ クエスト達成！',
                 `EXP +${reward.exp}\nGold +${reward.gold}\n\nよくやった、冒険者よ！`,
