@@ -10,11 +10,20 @@ if ($currentBranch -like "feature/auto-*") {
         git commit -m "auto: $fileList"
     }
 
+    git checkout develop 2>$null
+    $mergeResult = git merge $currentBranch --no-ff --no-edit 2>&1
+    $mergeSuccess = $LASTEXITCODE -eq 0
+
     Add-Type -AssemblyName System.Windows.Forms
     $notify = New-Object System.Windows.Forms.NotifyIcon
     $notify.Icon = [System.Drawing.SystemIcons]::Information
     $notify.BalloonTipTitle = "TaskQuest - Claude Code"
-    $notify.BalloonTipText = "[$currentBranch] 修正・コミット完了！確認してください。"
+    if ($mergeSuccess) {
+        $notify.BalloonTipText = "[$currentBranch] developにマージ完了！確認してください。"
+    } else {
+        $notify.BalloonTipText = "[$currentBranch] マージ失敗。競合を確認してください。"
+        $notify.Icon = [System.Drawing.SystemIcons]::Warning
+    }
     $notify.Visible = $true
     $notify.ShowBalloonTip(10000)
     Start-Sleep -Seconds 1

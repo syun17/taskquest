@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeScreen } from '../screens/HomeScreen';
 import { QuestBoardScreen } from '../screens/QuestBoardScreen';
 import { ActiveQuestsScreen } from '../screens/ActiveQuestsScreen';
@@ -14,18 +15,24 @@ import { Colors, Fonts } from '../constants/theme';
 const Tab = createBottomTabNavigator();
 
 const tabStyles = StyleSheet.create({
-  container: {
+  iconWrapper: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderTopWidth: 3,
-    borderTopColor: 'transparent',
-    paddingTop: 4,
   },
-  containerFocused: {
-    borderTopColor: Colors.gold,
+  activeLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: Colors.gold,
   },
   icon: { fontSize: 22, opacity: 0.4 },
   iconFocused: { opacity: 1 },
+  iconImage: { width: 28, height: 28, opacity: 0.4 },
+  iconImageFocused: { opacity: 1 },
   headerTitle: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.lg,
@@ -40,14 +47,25 @@ function HeaderTitle({ title }: { title: string }) {
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   return (
-    <View style={[tabStyles.container, focused && tabStyles.containerFocused]}>
+    <View style={tabStyles.iconWrapper}>
+      {focused && <View style={tabStyles.activeLine} />}
       <Text style={[tabStyles.icon, focused && tabStyles.iconFocused]}>{icon}</Text>
+    </View>
+  );
+}
+
+function TabIconImage({ source, focused }: { source: number; focused: boolean }) {
+  return (
+    <View style={tabStyles.iconWrapper}>
+      {focused && <View style={tabStyles.activeLine} />}
+      <Image source={source} style={[tabStyles.iconImage, focused && tabStyles.iconImageFocused]} />
     </View>
   );
 }
 
 export function AppNavigator() {
   const activeCount = useQuestStore(s => s.getActiveQuests().length);
+  const insets = useSafeAreaInsets();
 
   return (
     <NavigationContainer>
@@ -66,8 +84,9 @@ export function AppNavigator() {
             backgroundColor: Colors.bgSecondary,
             borderTopWidth: 3,
             borderTopColor: Colors.border,
-            height: 56,
-            paddingBottom: 4,
+            height: 64 + insets.bottom,
+            paddingBottom: insets.bottom,
+            paddingTop: 0,
             elevation: 0,
           },
           tabBarShowLabel: false,
@@ -78,7 +97,7 @@ export function AppNavigator() {
           component={HomeScreen}
           options={{
             title: '[ ギルドホーム ]',
-            tabBarIcon: ({ focused }) => <TabIcon icon="🏠" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIconImage source={require('../assets/icons/emblem_v2.png')} focused={focused} />,
           }}
         />
         <Tab.Screen
@@ -86,7 +105,7 @@ export function AppNavigator() {
           component={QuestBoardScreen}
           options={{
             title: '[ 掲示板 ]',
-            tabBarIcon: ({ focused }) => <TabIcon icon="📋" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIconImage source={require('../assets/icons/board.png')} focused={focused} />,
           }}
         />
         <Tab.Screen
@@ -99,7 +118,7 @@ export function AppNavigator() {
               backgroundColor: Colors.border,
               fontSize: 10,
             },
-            tabBarIcon: ({ focused }) => <TabIcon icon="⚔" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIconImage source={require('../assets/icons/sword.png')} focused={focused} />,
           }}
         />
         <Tab.Screen
@@ -115,7 +134,7 @@ export function AppNavigator() {
           component={GachaScreen}
           options={{
             title: '[ ガチャ ]',
-            tabBarIcon: ({ focused }) => <TabIcon icon="🎲" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIconImage source={require('../assets/icons/chest_closed.png')} focused={focused} />,
           }}
         />
         <Tab.Screen

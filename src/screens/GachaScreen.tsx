@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -31,6 +31,8 @@ export function GachaScreen() {
 
   const [lastResult, setLastResult] = useState<Item | null>(null);
   const [isRolling, setIsRolling] = useState(false);
+  const isMountedRef = useRef(true);
+  useEffect(() => { return () => { isMountedRef.current = false; }; }, []);
 
   const canRoll = character.gold >= GACHA_COST;
   const rates = GACHA_RATES_BY_RANK[character.guildRank];
@@ -47,6 +49,7 @@ export function GachaScreen() {
 
     setIsRolling(true);
     setTimeout(() => {
+      if (!isMountedRef.current) { return; }
       const item = rollGachaFn(character.guildRank);
       setLastResult(item);
       setIsRolling(false);
