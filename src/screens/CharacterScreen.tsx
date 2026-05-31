@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -156,7 +156,7 @@ export function CharacterScreen() {
             { label: 'GOLD', value: `${character.gold.toLocaleString()}G`, color: Colors.gold },
             { label: 'ATK', value: String(totalAttack), color: Colors.red },
             { label: 'DEF', value: String(totalDefense), color: Colors.blue },
-            { label: 'QUEST', value: `${character.completedQuests}件`, color: Colors.green },
+            { label: 'QUEST', value: `${character.completedQuests}件`, color: Colors.text },
           ].map(stat => (
             <View key={stat.label} style={styles.statBox}>
               <Text style={styles.statLabel}>{stat.label}</Text>
@@ -194,7 +194,7 @@ export function CharacterScreen() {
       {synthesisGroups.length > 0 && (
         <>
           <Text style={styles.sectionHeader}>【 装備合成 】</Text>
-          <PixelBorder color={Colors.purple} style={styles.synthesisCard}>
+          <PixelBorder style={styles.synthesisCard}>
             <Text style={styles.synthesisNote}>
               同じ装備を4個合成してレアリティアップ！
             </Text>
@@ -287,11 +287,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, gap: Spacing.md },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
   },
   card: { gap: Spacing.md },
@@ -307,28 +306,26 @@ const styles = StyleSheet.create({
   },
   avatarText: { fontSize: 32 },
   charName: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.white,
-    fontWeight: 'bold',
   },
   charTitle: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.sm,
-    color: Colors.gold,
+    color: Colors.textDim,
   },
   rankBadge: {
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.borderDim,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     alignSelf: 'flex-start',
   },
   rankText: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
-    color: Colors.border,
-    fontWeight: 'bold',
+    color: Colors.textDim,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -350,16 +347,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   statValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
-    fontWeight: 'bold',
     color: Colors.text,
   },
   sectionHeader: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.text,
-    fontWeight: 'bold',
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -402,16 +397,15 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
   },
   equippedLabel: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
     color: Colors.gold,
-    fontWeight: 'bold',
   },
   synthesisCard: { gap: Spacing.sm },
   synthesisNote: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.purple,
+    color: Colors.textDim,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },
@@ -432,10 +426,9 @@ const styles = StyleSheet.create({
   },
   synthesisTextBlock: { flex: 1, gap: 2 },
   synthesisItemName: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
     color: Colors.text,
-    fontWeight: 'bold',
   },
   synthesisCount: {
     fontFamily: Fonts.mono,
@@ -456,10 +449,9 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   modalItemName: {
     flex: 1,
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.white,
-    fontWeight: 'bold',
   },
   modalItemDesc: {
     fontFamily: Fonts.mono,
@@ -469,9 +461,8 @@ const styles = StyleSheet.create({
   },
   modalStats: { flexDirection: 'row', gap: Spacing.lg },
   modalStat: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
-    fontWeight: 'bold',
   },
   modalActions: { flexDirection: 'row', gap: Spacing.sm },
 });

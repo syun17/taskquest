@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -242,11 +242,10 @@ export function QuestBoardScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
     padding: Spacing.lg,
     paddingBottom: Spacing.sm,
@@ -272,10 +271,9 @@ const styles = StyleSheet.create({
   questHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   questTitle: {
     flex: 1,
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.text,
-    fontWeight: 'bold',
   },
   questDesc: {
     fontFamily: Fonts.mono,
@@ -286,20 +284,20 @@ const styles = StyleSheet.create({
   questConditions: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.blue,
+    color: Colors.textDim,
     lineHeight: 16,
   },
   questDeadline: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.orange,
+    color: Colors.textDim,
   },
   questFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rewards: { gap: 2 },
   rewardText: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.green,
+    color: Colors.textDim,
   },
   actions: { flexDirection: 'row', gap: Spacing.sm },
   smallBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs },
@@ -315,10 +313,9 @@ const styles = StyleSheet.create({
   },
   modal: { maxHeight: '90%' },
   modalTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
-    fontWeight: 'bold',
+    color: Colors.text,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
@@ -350,16 +347,15 @@ const styles = StyleSheet.create({
   },
   diffBtnSelected: { borderColor: Colors.gold, backgroundColor: Colors.gold + '33' },
   diffBtnText: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.textDim,
-    fontWeight: 'bold',
   },
   diffBtnTextSelected: { color: Colors.gold },
   rewardPreview: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.sm,
-    color: Colors.green,
+    color: Colors.textDim,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },

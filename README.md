@@ -134,6 +134,56 @@ npm run lint
 npm test
 ```
 
+## 使用フォント
+
+### ベストテンFONT（BestTen-DOT）
+
+| 項目 | 内容 |
+|---|---|
+| フォント名 | ベストテンFONT（BestTen-DOT / BestTen-CRT） |
+| 制作者 | Flop Design（フロップデザイン） |
+| 配布元 | https://www.flopdesign.com/ |
+| ダウンロード | https://booth.pm/ja/items/2747965 （無料） |
+
+#### ライセンス
+
+ベストテンFONT は **M+ FONTS PROJECT License** のもとで配布されています。
+
+> These fonts are free software.  
+> Unlimited permission is granted to use, copy, and distribute them, with  
+> or without modification, either commercially or noncommercially.  
+> THESE FONTS ARE PROVIDED "AS IS" WITHOUT WARRANTY.  
+>
+> Copyright (C) 2002-2021 M+ FONTS PROJECT  
+> Copyright (C) 2021 FLOP DESIGN
+
+フォントファイルの詳細なライセンスは [`Best10-FONT/mplus_bitmap_fonts/LICENSE_E`](Best10-FONT/mplus_bitmap_fonts/LICENSE_E) を参照してください。
+
+#### クレジット表記
+
+```
+使用フォント：ベストテンFONT by Flop Design
+https://www.flopdesign.com/
+```
+
+#### プロジェクトへの組み込み方法
+
+フォントファイルは以下に配置済みです（再設定不要）：
+
+```
+src/assets/fonts/          ← ソース管理用
+android/app/src/main/assets/fonts/  ← Android ビルド用
+```
+
+フォントのリンク設定は `react-native.config.js` で管理しています。  
+フォントを追加・変更する場合は以下を実行してください：
+
+```sh
+npx @react-native-community/cli link
+```
+
+---
+
 ## 画面構成
 
 | タブ | 内容 |

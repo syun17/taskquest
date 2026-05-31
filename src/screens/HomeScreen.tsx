@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { useQuestStore } from '../store/useQuestStore';
@@ -69,9 +69,7 @@ export function HomeScreen() {
           </View>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>RANK</Text>
-            <Text style={[styles.statValue, { color: Colors.purple }]}>
-              {character.guildRank}
-            </Text>
+            <Text style={styles.statValue}>{character.guildRank}</Text>
           </View>
         </View>
       </PixelBorder>
@@ -81,23 +79,19 @@ export function HomeScreen() {
         <Text style={styles.sectionTitle}>▶ クエスト状況</Text>
         <View style={styles.questSummary}>
           <View style={styles.questStat}>
-            <Text style={[styles.questCount, { color: Colors.orange }]}>
-              {activeQuests.length}
-            </Text>
+            <Text style={styles.questCount}>{activeQuests.length}</Text>
             <Text style={styles.questLabel}>進行中</Text>
           </View>
           <Text style={styles.questDivider}>|</Text>
           <View style={styles.questStat}>
-            <Text style={[styles.questCount, { color: Colors.green }]}>
-              {completedQuests.length}
-            </Text>
+            <Text style={styles.questCount}>{completedQuests.length}</Text>
             <Text style={styles.questLabel}>達成済み</Text>
           </View>
         </View>
       </PixelBorder>
 
       {/* Guild Notice Board */}
-      <PixelBorder style={styles.card} color={Colors.gold}>
+      <PixelBorder style={styles.card}>
         <Text style={styles.noticeBoardTitle}>📋 ギルド掲示板からのお知らせ</Text>
         <Text style={styles.noticeText}>
           {character.completedQuests === 0
@@ -117,20 +111,18 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, gap: Spacing.md },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
     marginBottom: Spacing.xs,
   },
   card: { gap: Spacing.sm },
   characterName: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.white,
-    fontWeight: 'bold',
   },
   title: {
     fontFamily: Fonts.mono,
@@ -144,10 +136,9 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.xs,
   },
   sectionTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.text,
-    fontWeight: 'bold',
     marginBottom: Spacing.xs,
   },
   statsRow: {
@@ -163,10 +154,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   statValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.text,
-    fontWeight: 'bold',
   },
   questSummary: {
     flexDirection: 'row',
@@ -177,9 +167,9 @@ const styles = StyleSheet.create({
   },
   questStat: { alignItems: 'center', gap: 2 },
   questCount: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xxl,
-    fontWeight: 'bold',
+    color: Colors.text,
   },
   questLabel: {
     fontFamily: Fonts.mono,
@@ -191,10 +181,9 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.xxl,
   },
   noticeBoardTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
-    color: Colors.gold,
-    fontWeight: 'bold',
+    color: Colors.text,
     marginBottom: Spacing.sm,
   },
   noticeText: {

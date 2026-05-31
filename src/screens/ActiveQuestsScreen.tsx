@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import { useQuestStore } from '../store/useQuestStore';
 import { useCharacterStore } from '../store/useCharacterStore';
@@ -81,7 +81,7 @@ export function ActiveQuestsScreen() {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <PixelBorder style={styles.questCard} color={Colors.orange}>
+            <PixelBorder style={styles.questCard}>
               <View style={styles.questHeader}>
                 <DifficultyBadge difficulty={item.difficulty} />
                 <View style={{ flex: 1 }}>
@@ -129,11 +129,10 @@ export function ActiveQuestsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
     padding: Spacing.lg,
     paddingBottom: Spacing.sm,
@@ -158,15 +157,14 @@ const styles = StyleSheet.create({
   questCard: { gap: Spacing.sm },
   questHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
   questTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.text,
-    fontWeight: 'bold',
   },
   elapsed: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.orange,
+    color: Colors.textDim,
   },
   questDesc: {
     fontFamily: Fonts.mono,
@@ -179,7 +177,7 @@ const styles = StyleSheet.create({
   rewardText: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.green,
+    color: Colors.textDim,
   },
   actions: { flexDirection: 'row', gap: Spacing.sm },
   smallBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs },

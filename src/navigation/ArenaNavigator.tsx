@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { ArenaScreen } from '../screens/ArenaScreen';
 import { BattleScreen } from '../screens/BattleScreen';
@@ -13,18 +14,26 @@ export type ArenaStackParamList = {
 
 const Stack = createStackNavigator<ArenaStackParamList>();
 
+const styles = StyleSheet.create({
+  headerTitle: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.lg,
+    color: Colors.gold,
+    letterSpacing: 2,
+  },
+});
+
+function HeaderTitle({ title }: { title: string }) {
+  return <Text style={styles.headerTitle}>{title}</Text>;
+}
+
 export function ArenaNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: { backgroundColor: Colors.bgSecondary, borderBottomWidth: 0 },
         headerTintColor: Colors.gold,
-        headerTitleStyle: {
-          fontFamily: Fonts.mono,
-          fontSize: Fonts.size.lg,
-          fontWeight: 'bold',
-          letterSpacing: 2,
-        },
+        headerTitle: ({ children }) => <HeaderTitle title={children} />,
         cardStyle: { backgroundColor: Colors.bg },
       }}
     >
