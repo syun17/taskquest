@@ -61,6 +61,66 @@ Get-WmiObject Win32_Process |
 
 ---
 
+## Android APK ビルド（リリース用）
+
+### 前提条件（初回のみ・Windows）
+
+Windows の MAX_PATH 制限（260文字）により、そのままではビルドが失敗する。以下を一度だけ設定する。
+
+**1. Windows Long Path 有効化（管理者 PowerShell で実行）**
+
+```powershell
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
+```
+
+**2. Git の長いパス対応を有効化**
+
+```powershell
+git config --global core.longpaths true
+```
+
+**3. ninja を新しいバージョンに差し替え**
+
+Android SDK に同梱の ninja 1.10.2 は Long Path 非対応のため、1.11 以降への差し替えが必要。
+
+```powershell
+# winget で最新 ninja をインストール
+winget install Ninja-build.Ninja
+
+# ターミナルを再起動後、SDK の ninja を差し替え
+Copy-Item (Get-Command ninja).Source `
+  "$env:LOCALAPPDATA\Android\Sdk\cmake\3.22.1\bin\ninja.exe" -Force
+```
+
+### APK ビルド手順
+
+```powershell
+cd android
+.\gradlew assembleRelease
+```
+
+出力先：`android/app/build/outputs/apk/release/app-release.apk`
+
+### 端末へのインストール
+
+USB 接続 + USB デバッグ有効の状態で：
+
+```powershell
+adb install android\app\build\outputs\apk\release\app-release.apk
+```
+
+### キャッシュクリア（ビルドが壊れた場合）
+
+```powershell
+# cmake キャッシュを削除
+Remove-Item -Recurse -Force "\\?\$PWD\android\app\.cxx" -ErrorAction SilentlyContinue
+
+# Gradle キャッシュを削除
+cd android && .\gradlew clean
+```
+
+---
+
 ## 開発中によく使うコマンド
 
 ```sh

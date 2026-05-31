@@ -43,3 +43,41 @@ export interface Item {
   equipped: boolean;
   obtainedAt: number;
 }
+
+export type ArenaRank = 'novice' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'legend';
+
+export interface Opponent {
+  id: string;
+  name: string;
+  level: number;
+  hp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  arenaRank: ArenaRank;
+  reward: {
+    exp: number;
+    gold: number;
+    arenaCoins: number;
+  };
+}
+
+export interface BattleLogEntry {
+  turn: number;
+  attacker: 'player' | 'opponent';
+  damage: number;
+  playerHp: number;
+  opponentHp: number;
+}
+
+export interface BattleRecord {
+  id: string;
+  opponentId: string;
+  opponentName: string;
+  won: boolean;
+  earnedExp: number;
+  earnedGold: number;
+  earnedCoins: number;
+  battleLog: BattleLogEntry[];
+  createdAt: number;
+}

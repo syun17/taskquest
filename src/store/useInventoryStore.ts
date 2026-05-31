@@ -31,6 +31,7 @@ interface InventoryStore {
   load: () => Promise<void>;
   save: (items: Item[]) => Promise<void>;
   rollGacha: (rank: GuildRank) => Item;
+  addItem: (data: Omit<Item, 'id' | 'equipped' | 'obtainedAt'>) => Item;
   equipItem: (id: string) => void;
   unequipItem: (id: string) => void;
   sellItem: (id: string) => number;
@@ -60,6 +61,20 @@ export const useInventoryStore = create<InventoryStore>((set, get) => ({
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {}
+  },
+
+  addItem: (data: Omit<Item, 'id' | 'equipped' | 'obtainedAt'>): Item => {
+    const { items, save } = get();
+    const newItem: Item = {
+      ...data,
+      id: generateId(),
+      equipped: false,
+      obtainedAt: Date.now(),
+    };
+    const updated = [...items, newItem];
+    set({ items: updated });
+    save(updated);
+    return newItem;
   },
 
   rollGacha: (rank: GuildRank): Item => {

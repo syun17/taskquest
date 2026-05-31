@@ -7,6 +7,7 @@ import { QuestBoardScreen } from '../screens/QuestBoardScreen';
 import { ActiveQuestsScreen } from '../screens/ActiveQuestsScreen';
 import { CharacterScreen } from '../screens/CharacterScreen';
 import { GachaScreen } from '../screens/GachaScreen';
+import { ArenaNavigator } from './ArenaNavigator';
 import { useQuestStore } from '../store/useQuestStore';
 import { Colors, Fonts } from '../constants/theme';
 
@@ -111,6 +112,16 @@ export function AppNavigator() {
             title: 'ガチャ',
             tabBarIcon: ({ focused }) => (
               <TabIcon icon="🎲" label="ガチャ" focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Arena"
+          component={ArenaNavigator}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon icon="🏟" label="闘技場" focused={focused} />
             ),
           }}
         />

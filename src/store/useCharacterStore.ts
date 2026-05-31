@@ -25,6 +25,7 @@ interface CharacterStore {
   gainGold: (amount: number) => void;
   spendGold: (amount: number) => boolean;
   setName: (name: string) => void;
+  setTitle: (title: string) => void;
 }
 
 export const useCharacterStore = create<CharacterStore>((set, get) => ({
@@ -98,6 +99,13 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
   setName: (name: string) => {
     const { character, save } = get();
     const updated = { ...character, name };
+    set({ character: updated });
+    save(updated);
+  },
+
+  setTitle: (title: string) => {
+    const { character, save } = get();
+    const updated = { ...character, title };
     set({ character: updated });
     save(updated);
   },
