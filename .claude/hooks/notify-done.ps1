@@ -11,7 +11,7 @@ if ($currentBranch -like "feature/auto-*") {
     }
 
     git checkout develop 2>$null
-    $mergeResult = git merge $currentBranch --no-edit 2>&1
+    $mergeResult = git merge $currentBranch --no-ff --no-edit 2>&1
     $mergeSuccess = $LASTEXITCODE -eq 0
 
     Add-Type -AssemblyName System.Windows.Forms
