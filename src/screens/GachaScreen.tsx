@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -179,11 +179,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, gap: Spacing.md },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.gold,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
   },
   subtitle: {
@@ -203,9 +202,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   infoValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
-    fontWeight: 'bold',
   },
   infoNote: {
     fontFamily: Fonts.mono,
@@ -215,10 +213,9 @@ const styles = StyleSheet.create({
   },
   machine: { gap: Spacing.lg, alignItems: 'center' },
   machineTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.gold,
-    fontWeight: 'bold',
     letterSpacing: 2,
   },
   rollingBox: {
@@ -245,9 +242,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   resultName: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    fontWeight: 'bold',
     textAlign: 'center',
   },
   resultType: {
@@ -257,9 +253,8 @@ const styles = StyleSheet.create({
   },
   resultStats: { flexDirection: 'row', gap: Spacing.lg },
   resultStat: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
-    fontWeight: 'bold',
   },
   resultDesc: {
     fontFamily: Fonts.mono,
@@ -283,19 +278,17 @@ const styles = StyleSheet.create({
   rollBtn: { alignSelf: 'stretch' },
   ratesCard: { gap: Spacing.sm },
   ratesTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.text,
-    fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },
   rateRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   rateLabel: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
     width: 80,
-    fontWeight: 'bold',
   },
   rateBarBg: {
     flex: 1,
@@ -306,11 +299,10 @@ const styles = StyleSheet.create({
   },
   rateBar: { height: '100%' },
   rateValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
     width: 36,
     textAlign: 'right',
-    fontWeight: 'bold',
   },
   rankNote: {
     fontFamily: Fonts.mono,
@@ -331,11 +323,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.gold + '44',
   },
   rankRateRank: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
     color: Colors.textDim,
     width: 16,
-    fontWeight: 'bold',
   },
   rankRateText: {
     fontFamily: Fonts.mono,

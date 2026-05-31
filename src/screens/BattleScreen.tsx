@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -60,9 +60,8 @@ const hpBarStyles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
-    fontWeight: 'bold',
   },
 });
 
@@ -286,10 +285,9 @@ const styles = StyleSheet.create({
   },
   fighterIcon: { fontSize: 36 },
   fighterName: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
     color: Colors.text,
-    fontWeight: 'bold',
     textAlign: 'center',
   },
   fighterLevel: {
@@ -310,10 +308,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   vsText: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.border,
-    fontWeight: 'bold',
   },
   turnText: {
     fontFamily: Fonts.mono,
@@ -366,9 +363,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   resultTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xxl,
-    fontWeight: 'bold',
     letterSpacing: 4,
   },
   rewardBlock: {
@@ -382,9 +378,8 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   rewardItem: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
-    fontWeight: 'bold',
   },
   defeatNote: {
     fontFamily: Fonts.mono,
@@ -400,10 +395,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   continueBtnText: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.white,
-    fontWeight: 'bold',
     letterSpacing: 2,
   },
   errorText: {

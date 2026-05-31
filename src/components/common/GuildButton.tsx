@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { TouchableOpacity, Text, View, StyleSheet, ViewStyle } from 'react-native';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
 
@@ -82,9 +82,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.25)',
   },
   label: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
-    fontWeight: 'bold',
     letterSpacing: 2,
     textTransform: 'uppercase',
   },

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { QuestDifficulty } from '../../types';
 import { Colors, Fonts } from '../../constants/theme';
@@ -44,9 +44,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
-    fontWeight: 'bold',
     letterSpacing: 0,
   },
 });

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { ItemRarity } from '../../types';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
@@ -42,9 +42,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
-    fontWeight: 'bold',
     letterSpacing: 1,
   },
 });

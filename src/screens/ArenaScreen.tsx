@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   View,
   Text,
@@ -158,11 +158,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, gap: Spacing.md },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.gold,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
   },
   rankCard: { gap: Spacing.sm },
@@ -175,9 +174,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   rankName: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    fontWeight: 'bold',
     letterSpacing: 2,
   },
   coinBox: {
@@ -192,10 +190,9 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
   },
   coinValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.orange,
-    fontWeight: 'bold',
   },
   wlRow: {
     flexDirection: 'row',
@@ -203,10 +200,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   wlText: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
     color: Colors.text,
-    fontWeight: 'bold',
   },
   wlSep: {
     fontFamily: Fonts.mono,
@@ -228,17 +224,15 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: '100%' },
   maxRankText: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
-    fontWeight: 'bold',
     textAlign: 'center',
     letterSpacing: 2,
   },
   sectionHeader: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.text,
-    fontWeight: 'bold',
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -255,10 +249,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   opponentName: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.white,
-    fontWeight: 'bold',
   },
   opponentLevel: {
     fontFamily: Fonts.mono,
@@ -284,9 +277,8 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
   },
   statChipValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
-    fontWeight: 'bold',
   },
   rewardRow: {
     flexDirection: 'row',
@@ -299,8 +291,7 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
   },
   rewardValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
-    fontWeight: 'bold',
   },
 });

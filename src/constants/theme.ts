@@ -48,6 +48,7 @@ export const Colors = {
 
 export const Fonts = {
   mono: 'BestTen-DOT',
+  monoBold: 'BestTen-DOT_Bold',
   size: {
     xs: 10,
     sm: 12,

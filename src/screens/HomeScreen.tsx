@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { useQuestStore } from '../store/useQuestStore';
@@ -117,20 +117,18 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, gap: Spacing.md },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.gold,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
     marginBottom: Spacing.xs,
   },
   card: { gap: Spacing.sm },
   characterName: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.white,
-    fontWeight: 'bold',
   },
   title: {
     fontFamily: Fonts.mono,
@@ -144,10 +142,9 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.xs,
   },
   sectionTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.text,
-    fontWeight: 'bold',
     marginBottom: Spacing.xs,
   },
   statsRow: {
@@ -163,10 +160,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   statValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.text,
-    fontWeight: 'bold',
   },
   questSummary: {
     flexDirection: 'row',
@@ -177,9 +173,8 @@ const styles = StyleSheet.create({
   },
   questStat: { alignItems: 'center', gap: 2 },
   questCount: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xxl,
-    fontWeight: 'bold',
   },
   questLabel: {
     fontFamily: Fonts.mono,
@@ -191,10 +186,9 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.xxl,
   },
   noticeBoardTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
     color: Colors.gold,
-    fontWeight: 'bold',
     marginBottom: Spacing.sm,
   },
   noticeText: {

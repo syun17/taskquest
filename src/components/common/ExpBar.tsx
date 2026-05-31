@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
 
@@ -40,10 +40,9 @@ const styles = StyleSheet.create({
   container: { gap: Spacing.xs },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   label: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.gold,
-    fontWeight: 'bold',
     letterSpacing: 1,
   },
   expText: {
