@@ -73,11 +73,11 @@ export function GachaScreen() {
       <Text style={styles.subtitle}>～ 運命の一振り ～</Text>
 
       {/* Gacha Info */}
-      <PixelBorder style={styles.infoCard} color={Colors.purple}>
+      <PixelBorder style={styles.infoCard}>
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>ギルドランク</Text>
-            <Text style={[styles.infoValue, { color: Colors.purple }]}>
+            <Text style={styles.infoValue}>
               {character.guildRank}ランク
             </Text>
           </View>
@@ -89,7 +89,7 @@ export function GachaScreen() {
           </View>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>必要Gold</Text>
-            <Text style={[styles.infoValue, { color: Colors.red }]}>{GACHA_COST}G</Text>
+            <Text style={styles.infoValue}>{GACHA_COST}G</Text>
           </View>
         </View>
         <Text style={styles.infoNote}>
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
     letterSpacing: 2,
   },
@@ -204,6 +204,7 @@ const styles = StyleSheet.create({
   infoValue: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
+    color: Colors.text,
   },
   infoNote: {
     fontFamily: Fonts.mono,
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
   machineTitle: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
-    color: Colors.gold,
+    color: Colors.text,
     letterSpacing: 2,
   },
   rollingBox: {

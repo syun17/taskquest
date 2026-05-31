@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
     letterSpacing: 2,
     padding: Spacing.lg,
@@ -284,20 +284,20 @@ const styles = StyleSheet.create({
   questConditions: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.blue,
+    color: Colors.textDim,
     lineHeight: 16,
   },
   questDeadline: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.orange,
+    color: Colors.textDim,
   },
   questFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rewards: { gap: 2 },
   rewardText: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.green,
+    color: Colors.textDim,
   },
   actions: { flexDirection: 'row', gap: Spacing.sm },
   smallBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   rewardPreview: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.sm,
-    color: Colors.green,
+    color: Colors.textDim,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },

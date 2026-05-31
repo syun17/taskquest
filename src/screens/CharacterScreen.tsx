@@ -156,7 +156,7 @@ export function CharacterScreen() {
             { label: 'GOLD', value: `${character.gold.toLocaleString()}G`, color: Colors.gold },
             { label: 'ATK', value: String(totalAttack), color: Colors.red },
             { label: 'DEF', value: String(totalDefense), color: Colors.blue },
-            { label: 'QUEST', value: `${character.completedQuests}件`, color: Colors.green },
+            { label: 'QUEST', value: `${character.completedQuests}件`, color: Colors.text },
           ].map(stat => (
             <View key={stat.label} style={styles.statBox}>
               <Text style={styles.statLabel}>{stat.label}</Text>
@@ -194,7 +194,7 @@ export function CharacterScreen() {
       {synthesisGroups.length > 0 && (
         <>
           <Text style={styles.sectionHeader}>【 装備合成 】</Text>
-          <PixelBorder color={Colors.purple} style={styles.synthesisCard}>
+          <PixelBorder style={styles.synthesisCard}>
             <Text style={styles.synthesisNote}>
               同じ装備を4個合成してレアリティアップ！
             </Text>
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
     letterSpacing: 2,
   },
@@ -313,11 +313,11 @@ const styles = StyleSheet.create({
   charTitle: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.sm,
-    color: Colors.gold,
+    color: Colors.textDim,
   },
   rankBadge: {
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.borderDim,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     alignSelf: 'flex-start',
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   rankText: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
-    color: Colors.border,
+    color: Colors.textDim,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   synthesisNote: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.purple,
+    color: Colors.textDim,
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },

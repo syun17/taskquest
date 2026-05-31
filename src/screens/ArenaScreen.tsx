@@ -33,10 +33,10 @@ function OpponentCard({ opponent, onFight }: { opponent: Opponent; onFight: () =
       </View>
       <View style={styles.opponentStats}>
         {[
-          { label: 'HP', value: opponent.hp, color: Colors.green },
+          { label: 'HP', value: opponent.hp, color: Colors.text },
           { label: 'ATK', value: opponent.attack, color: Colors.red },
           { label: 'DEF', value: opponent.defense, color: Colors.blue },
-          { label: 'SPD', value: opponent.speed, color: Colors.orange },
+          { label: 'SPD', value: opponent.speed, color: Colors.text },
         ].map(stat => (
           <View key={stat.label} style={styles.statChip}>
             <Text style={styles.statChipLabel}>{stat.label}</Text>
@@ -46,9 +46,9 @@ function OpponentCard({ opponent, onFight }: { opponent: Opponent; onFight: () =
       </View>
       <View style={styles.rewardRow}>
         <Text style={styles.rewardLabel}>勝利報酬:</Text>
-        <Text style={[styles.rewardValue, { color: Colors.green }]}>{opponent.reward.exp}EXP</Text>
+        <Text style={[styles.rewardValue, { color: Colors.textDim }]}>{opponent.reward.exp}EXP</Text>
         <Text style={[styles.rewardValue, { color: Colors.gold }]}>{opponent.reward.gold}G</Text>
-        <Text style={[styles.rewardValue, { color: Colors.orange }]}>{opponent.reward.arenaCoins}コイン</Text>
+        <Text style={[styles.rewardValue, { color: Colors.textDim }]}>{opponent.reward.arenaCoins}コイン</Text>
       </View>
       <GuildButton label="挑戦する" variant="primary" onPress={onFight} />
     </PixelBorder>
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
     letterSpacing: 2,
   },
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   coinValue: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
-    color: Colors.orange,
+    color: Colors.text,
   },
   wlRow: {
     flexDirection: 'row',

@@ -73,7 +73,7 @@ function ShopItemCard({
       <View style={styles.buyRow}>
         <View style={styles.costBox}>
           <Text style={styles.costLabel}>コスト</Text>
-          <Text style={[styles.costValue, { color: canAfford ? Colors.orange : Colors.textDim }]}>
+          <Text style={[styles.costValue, { color: canAfford ? Colors.text : Colors.textDim }]}>
             {item.cost} コイン
           </Text>
         </View>
@@ -135,7 +135,7 @@ export function ArenaShopScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.header}>【 アリーナショップ 】</Text>
 
-      <PixelBorder style={styles.coinDisplay} color={Colors.orange}>
+      <PixelBorder style={styles.coinDisplay}>
         <Text style={styles.coinLabel}>所持アリーナコイン</Text>
         <Text style={styles.coinValue}>{arenaCoins} コイン</Text>
         <Text style={styles.coinNote}>
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
     letterSpacing: 2,
   },
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   coinValue: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xxl,
-    color: Colors.orange,
+    color: Colors.text,
   },
   coinNote: {
     fontFamily: Fonts.mono,
@@ -202,7 +202,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   titleBadge: {
-    backgroundColor: Colors.purple,
+    backgroundColor: Colors.bgSecondary,
+    borderWidth: 1,
+    borderColor: Colors.borderDim,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
   },

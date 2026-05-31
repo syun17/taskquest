@@ -81,7 +81,7 @@ export function ActiveQuestsScreen() {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <PixelBorder style={styles.questCard} color={Colors.orange}>
+            <PixelBorder style={styles.questCard}>
               <View style={styles.questHeader}>
                 <DifficultyBadge difficulty={item.difficulty} />
                 <View style={{ flex: 1 }}>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
-    color: Colors.gold,
+    color: Colors.text,
     textAlign: 'center',
     letterSpacing: 2,
     padding: Spacing.lg,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   elapsed: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.orange,
+    color: Colors.textDim,
   },
   questDesc: {
     fontFamily: Fonts.mono,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   rewardText: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,
-    color: Colors.green,
+    color: Colors.textDim,
   },
   actions: { flexDirection: 'row', gap: Spacing.sm },
   smallBtn: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs },
