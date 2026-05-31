@@ -15,16 +15,19 @@ import { Colors, Fonts } from '../constants/theme';
 const Tab = createBottomTabNavigator();
 
 const tabStyles = StyleSheet.create({
-  container: {
+  iconWrapper: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderTopWidth: 3,
-    borderTopColor: 'transparent',
-    paddingTop: 2,
-    paddingBottom: 2,
   },
-  containerFocused: {
-    borderTopColor: Colors.gold,
+  activeLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: Colors.gold,
   },
   icon: { fontSize: 22, opacity: 0.4 },
   iconFocused: { opacity: 1 },
@@ -42,7 +45,8 @@ function HeaderTitle({ title }: { title: string }) {
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   return (
-    <View style={[tabStyles.container, focused && tabStyles.containerFocused]}>
+    <View style={tabStyles.iconWrapper}>
+      {focused && <View style={tabStyles.activeLine} />}
       <Text style={[tabStyles.icon, focused && tabStyles.iconFocused]}>{icon}</Text>
     </View>
   );
@@ -70,8 +74,8 @@ export function AppNavigator() {
             borderTopWidth: 3,
             borderTopColor: Colors.border,
             height: 64 + insets.bottom,
-            paddingBottom: 8 + insets.bottom,
-            paddingTop: 4,
+            paddingBottom: insets.bottom,
+            paddingTop: 0,
             elevation: 0,
           },
           tabBarShowLabel: false,
