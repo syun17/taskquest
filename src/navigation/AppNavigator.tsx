@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeScreen } from '../screens/HomeScreen';
 import { QuestBoardScreen } from '../screens/QuestBoardScreen';
 import { ActiveQuestsScreen } from '../screens/ActiveQuestsScreen';
@@ -48,6 +49,7 @@ function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
 
 export function AppNavigator() {
   const activeCount = useQuestStore(s => s.getActiveQuests().length);
+  const insets = useSafeAreaInsets();
 
   return (
     <NavigationContainer>
@@ -66,8 +68,8 @@ export function AppNavigator() {
             backgroundColor: Colors.bgSecondary,
             borderTopWidth: 3,
             borderTopColor: Colors.border,
-            height: 56,
-            paddingBottom: 4,
+            height: 56 + insets.bottom,
+            paddingBottom: 4 + insets.bottom,
             elevation: 0,
           },
           tabBarShowLabel: false,
