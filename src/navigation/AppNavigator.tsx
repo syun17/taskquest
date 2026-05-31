@@ -17,14 +17,12 @@ const tabStyles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderTopWidth: 0,
+    borderTopWidth: 3,
+    borderTopColor: 'transparent',
+    paddingTop: 4,
   },
   containerFocused: {
-    borderTopWidth: 3,
     borderTopColor: Colors.gold,
-    marginTop: -3,
   },
   icon: { fontSize: 22, opacity: 0.4 },
   iconFocused: { opacity: 1 },
