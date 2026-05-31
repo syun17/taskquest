@@ -13,27 +13,38 @@ import { Colors, Fonts } from '../constants/theme';
 
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ icon, label, focused }: { icon: string; label: string; focused: boolean }) {
+const tabStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopWidth: 3,
+    borderTopColor: 'transparent',
+    paddingTop: 4,
+  },
+  containerFocused: {
+    borderTopColor: Colors.gold,
+  },
+  icon: { fontSize: 22, opacity: 0.4 },
+  iconFocused: { opacity: 1 },
+  headerTitle: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.lg,
+    color: Colors.gold,
+    letterSpacing: 3,
+  },
+});
+
+function HeaderTitle({ title }: { title: string }) {
+  return <Text style={tabStyles.headerTitle}>{title}</Text>;
+}
+
+function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   return (
-    <View style={tabIconStyles.container}>
-      <Text style={[tabIconStyles.icon, focused && tabIconStyles.focusedIcon]}>{icon}</Text>
-      <Text style={[tabIconStyles.label, focused && tabIconStyles.focusedLabel]}>{label}</Text>
+    <View style={[tabStyles.container, focused && tabStyles.containerFocused]}>
+      <Text style={[tabStyles.icon, focused && tabStyles.iconFocused]}>{icon}</Text>
     </View>
   );
 }
-
-const tabIconStyles = StyleSheet.create({
-  container: { alignItems: 'center', gap: 2, paddingTop: 4 },
-  icon: { fontSize: 20, opacity: 0.5 },
-  focusedIcon: { opacity: 1 },
-  label: {
-    fontFamily: Fonts.mono,
-    fontSize: 9,
-    color: Colors.textDim,
-    letterSpacing: 0.5,
-  },
-  focusedLabel: { color: Colors.gold },
-});
 
 export function AppNavigator() {
   const activeCount = useQuestStore(s => s.getActiveQuests().length);
@@ -42,20 +53,22 @@ export function AppNavigator() {
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: Colors.bgSecondary, borderBottomWidth: 0 },
-          headerTintColor: Colors.gold,
-          headerTitleStyle: {
-            fontFamily: Fonts.mono,
-            fontSize: Fonts.size.lg,
-            fontWeight: 'bold',
-            letterSpacing: 2,
+          headerStyle: {
+            backgroundColor: Colors.bgSecondary,
+            borderBottomWidth: 3,
+            borderBottomColor: Colors.border,
+            elevation: 0,
+            shadowOpacity: 0,
           },
+          headerTintColor: Colors.gold,
+          headerTitle: ({ children }) => <HeaderTitle title={children} />,
           tabBarStyle: {
             backgroundColor: Colors.bgSecondary,
-            borderTopWidth: 2,
-            borderTopColor: Colors.borderDim,
-            height: 64,
-            paddingBottom: 8,
+            borderTopWidth: 3,
+            borderTopColor: Colors.border,
+            height: 56,
+            paddingBottom: 4,
+            elevation: 0,
           },
           tabBarShowLabel: false,
         }}
@@ -64,55 +77,45 @@ export function AppNavigator() {
           name="Home"
           component={HomeScreen}
           options={{
-            title: 'ギルドホーム',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon icon="🏠" label="ホーム" focused={focused} />
-            ),
+            title: '[ ギルドホーム ]',
+            tabBarIcon: ({ focused }) => <TabIcon icon="🏠" focused={focused} />,
           }}
         />
         <Tab.Screen
           name="QuestBoard"
           component={QuestBoardScreen}
           options={{
-            title: 'クエスト掲示板',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon icon="📋" label="掲示板" focused={focused} />
-            ),
+            title: '[ 掲示板 ]',
+            tabBarIcon: ({ focused }) => <TabIcon icon="📋" focused={focused} />,
           }}
         />
         <Tab.Screen
           name="ActiveQuests"
           component={ActiveQuestsScreen}
           options={{
-            title: '進行中クエスト',
+            title: '[ 進行中 ]',
             tabBarBadge: activeCount > 0 ? activeCount : undefined,
             tabBarBadgeStyle: {
               backgroundColor: Colors.border,
               fontSize: 10,
             },
-            tabBarIcon: ({ focused }) => (
-              <TabIcon icon="⚔" label="進行中" focused={focused} />
-            ),
+            tabBarIcon: ({ focused }) => <TabIcon icon="⚔" focused={focused} />,
           }}
         />
         <Tab.Screen
           name="Character"
           component={CharacterScreen}
           options={{
-            title: 'キャラクター',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon icon="👤" label="キャラ" focused={focused} />
-            ),
+            title: '[ キャラ ]',
+            tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
           }}
         />
         <Tab.Screen
           name="Gacha"
           component={GachaScreen}
           options={{
-            title: 'ガチャ',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon icon="🎲" label="ガチャ" focused={focused} />
-            ),
+            title: '[ ガチャ ]',
+            tabBarIcon: ({ focused }) => <TabIcon icon="🎲" focused={focused} />,
           }}
         />
         <Tab.Screen
@@ -120,9 +123,7 @@ export function AppNavigator() {
           component={ArenaNavigator}
           options={{
             headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <TabIcon icon="🏟" label="闘技場" focused={focused} />
-            ),
+            tabBarIcon: ({ focused }) => <TabIcon icon="🏟" focused={focused} />,
           }}
         />
       </Tab.Navigator>

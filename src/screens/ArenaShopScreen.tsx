@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   View,
   Text,
@@ -161,11 +161,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, gap: Spacing.md },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.gold,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
   },
   coinDisplay: {
@@ -179,10 +178,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   coinValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xxl,
     color: Colors.orange,
-    fontWeight: 'bold',
   },
   coinNote: {
     fontFamily: Fonts.mono,
@@ -191,10 +189,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   sectionHeader: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.lg,
     color: Colors.text,
-    fontWeight: 'bold',
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -210,17 +207,15 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   titleBadgeText: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
     color: Colors.white,
-    fontWeight: 'bold',
   },
   itemName: {
     flex: 1,
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.white,
-    fontWeight: 'bold',
   },
   itemDesc: {
     fontFamily: Fonts.mono,
@@ -242,15 +237,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xs,
   },
   statText: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
-    fontWeight: 'bold',
   },
   titlePreview: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.gold,
-    fontWeight: 'bold',
     textAlign: 'center',
     letterSpacing: 2,
   },
@@ -267,9 +260,8 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
   },
   costValue: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
-    fontWeight: 'bold',
   },
   buyBtn: {
     paddingHorizontal: Spacing.lg,

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { ItemRarity } from '../../types';
 import { Colors, Fonts, Spacing } from '../../constants/theme';
@@ -25,7 +25,7 @@ interface Props {
 export function RarityBadge({ rarity, showLabel = false }: Props) {
   const color = RARITY_COLORS[rarity];
   return (
-    <View style={[styles.badge, { borderColor: color, backgroundColor: color + '22' }]}>
+    <View style={[styles.badge, { borderColor: color, backgroundColor: color + '33' }]}>
       <Text style={[styles.text, { color }]}>
         {showLabel ? rarity.toUpperCase() : RARITY_LABELS[rarity]}
       </Text>
@@ -35,15 +35,15 @@ export function RarityBadge({ rarity, showLabel = false }: Props) {
 
 const styles = StyleSheet.create({
   badge: {
-    borderWidth: 1,
+    borderWidth: 2,
     paddingHorizontal: Spacing.xs,
     paddingVertical: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xs,
-    fontWeight: 'bold',
+    letterSpacing: 1,
   },
 });

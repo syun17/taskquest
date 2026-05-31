@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import { useQuestStore } from '../store/useQuestStore';
 import { useCharacterStore } from '../store/useCharacterStore';
@@ -129,11 +129,10 @@ export function ActiveQuestsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   header: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
     color: Colors.gold,
     textAlign: 'center',
-    fontWeight: 'bold',
     letterSpacing: 2,
     padding: Spacing.lg,
     paddingBottom: Spacing.sm,
@@ -158,10 +157,9 @@ const styles = StyleSheet.create({
   questCard: { gap: Spacing.sm },
   questHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
   questTitle: {
-    fontFamily: Fonts.mono,
+    fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.md,
     color: Colors.text,
-    fontWeight: 'bold',
   },
   elapsed: {
     fontFamily: Fonts.mono,

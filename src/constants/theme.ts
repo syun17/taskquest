@@ -1,39 +1,54 @@
 export const Colors = {
-  bg: '#1a1a2e',
-  bgSecondary: '#16213e',
-  bgCard: '#0f3460',
-  border: '#e94560',
-  borderDim: '#533483',
-  gold: '#f5c518',
-  goldDim: '#b8860b',
-  text: '#e0e0e0',
-  textDim: '#888888',
-  textDark: '#333333',
+  // Backgrounds - near-black with blue tint (classic SNES RPG)
+  bg: '#080810',
+  bgSecondary: '#0f0f20',
+  bgCard: '#101028',
+
+  // Borders
+  border: '#ff3355',          // vivid red-pink accent
+  borderDim: '#4433aa',       // muted purple
+  borderHighlight: '#ff88aa', // light pink highlight
+
+  // Pixel shadow
+  shadowDark: '#000000',
+
+  // Gold
+  gold: '#ffdd00',
+  goldDim: '#aa8800',
+
+  // Text
+  text: '#ffffff',
+  textDim: '#7777aa',
+  textDark: '#000000',
   white: '#ffffff',
-  green: '#4caf50',
-  red: '#f44336',
-  blue: '#2196f3',
-  purple: '#9c27b0',
-  orange: '#ff9800',
+
+  // Status colors - vivid retro palette
+  green: '#00ee44',
+  red: '#ff2244',
+  blue: '#4488ff',
+  purple: '#cc44ff',
+  orange: '#ff8800',
+  cyan: '#00ffcc',
 
   // Rarity colors
-  rarityCommon: '#9e9e9e',
-  rarityRare: '#2196f3',
-  rarityEpic: '#9c27b0',
-  rarityLegendary: '#ff9800',
+  rarityCommon: '#aaaaaa',
+  rarityRare: '#4488ff',
+  rarityEpic: '#cc44ff',
+  rarityLegendary: '#ff8800',
 
   // Difficulty colors
-  diffF: '#9e9e9e',
-  diffE: '#4caf50',
-  diffD: '#2196f3',
-  diffC: '#ff9800',
-  diffB: '#f44336',
-  diffA: '#9c27b0',
-  diffS: '#f5c518',
+  diffF: '#888888',
+  diffE: '#00ee44',
+  diffD: '#4488ff',
+  diffC: '#ff8800',
+  diffB: '#ff2244',
+  diffA: '#cc44ff',
+  diffS: '#ffdd00',
 };
 
 export const Fonts = {
-  mono: 'Courier New',
+  mono: 'BestTen-DOT',
+  monoBold: 'BestTen-DOT_Bold',
   size: {
     xs: 10,
     sm: 12,
