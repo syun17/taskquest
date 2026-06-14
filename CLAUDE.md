@@ -41,22 +41,6 @@ src/
 - テーマ色は `Colors` から参照、直書き禁止
 - フォントは `Fonts.mono`（BestTen-DOT）を使用、system fontへの直書き禁止
 
-## 自動化ルール
-
-ファイルを変更したレスポンスの末尾では、必ず以下を実行する：
-
-```bash
-git add -A
-git commit -m "変更内容の要約"
-git checkout develop
-git merge <現在のfeatureブランチ> --no-ff --no-edit
-git checkout <現在のfeatureブランチ>
-```
-
-- コミットメッセージは変更内容を日本語で簡潔に記述
-- マージ後は必ずfeatureブランチに戻る（次のターンのためにUserPromptSubmitフックが機能するよう）
-- 変更がない場合（調査・説明のみ）はgit操作不要
-
 ## よく使うコマンド
 
 ```bash
