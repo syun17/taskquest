@@ -96,9 +96,9 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       }
     }
 
-    // 2レベルごとにSP+1
+    // 3レベルごとにSP+1
     const levelsGained = level - prevLevel;
-    const newSp = skillPoints + Math.floor(levelsGained / 2);
+    const newSp = skillPoints + Math.floor(levelsGained / 3);
 
     const newRank = getRankForLevel(level);
     const newMaxMp = 50 + level * 5;

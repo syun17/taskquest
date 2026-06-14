@@ -25,18 +25,29 @@ import { BattleLogEntry, BattleRecord, ManualBattleState, SkillId } from '../typ
 type Nav = StackNavigationProp<ArenaStackParamList, 'Battle'>;
 type Route = RouteProp<ArenaStackParamList, 'Battle'>;
 
-function HpBar({ current, max, color }: { current: number; max: number; color: string }) {
+const SKILL_ICONS: Record<SkillId, string> = {
+  slash: '⚔️',
+  fireball: '🔥',
+  heal: '💚',
+  shield: '🛡️',
+  poison: '☠️',
+  haste: '⚡',
+  rend: '💢',
+  divine_light: '✨',
+};
+
+function HpBar({ current, max }: { current: number; max: number }) {
   const pct = Math.max(0, Math.min(100, Math.round((current / max) * 100)));
+  const fillColor = pct > 50 ? Colors.green : pct > 25 ? Colors.orange : Colors.red;
   return (
-    <View style={hpBarStyles.bg}>
-      <View
-        style={[
-          hpBarStyles.fill,
-          { width: `${pct}%` as `${number}%`, backgroundColor: pct > 50 ? Colors.green : pct > 25 ? Colors.orange : Colors.red },
-        ]}
-      />
-      <View style={hpBarStyles.overlay}>
-        <Text style={[hpBarStyles.text, { color }]}>{current}/{max}</Text>
+    <View style={hpBarStyles.wrapper}>
+      <Text style={[hpBarStyles.barLabel, { color: fillColor }]}>HP</Text>
+      <View style={hpBarStyles.bg}>
+        <View style={[hpBarStyles.fill, { width: `${pct}%` as `${number}%`, backgroundColor: fillColor }]} />
+        <View style={hpBarStyles.highlight} />
+        <View style={hpBarStyles.overlay}>
+          <Text style={hpBarStyles.text}>{current}/{max}</Text>
+        </View>
       </View>
     </View>
   );
@@ -45,20 +56,30 @@ function HpBar({ current, max, color }: { current: number; max: number; color: s
 function MpBar({ current, max }: { current: number; max: number }) {
   const pct = Math.max(0, Math.min(100, Math.round((current / max) * 100)));
   return (
-    <View style={hpBarStyles.bg}>
-      <View style={[hpBarStyles.fill, { width: `${pct}%` as `${number}%`, backgroundColor: Colors.purple }]} />
-      <View style={hpBarStyles.overlay}>
-        <Text style={[hpBarStyles.text, { color: Colors.purple }]}>{current}/{max}</Text>
+    <View style={hpBarStyles.wrapper}>
+      <Text style={[hpBarStyles.barLabel, { color: Colors.purple }]}>MP</Text>
+      <View style={hpBarStyles.bg}>
+        <View style={[hpBarStyles.fill, { width: `${pct}%` as `${number}%`, backgroundColor: Colors.purple }]} />
+        <View style={hpBarStyles.highlight} />
+        <View style={hpBarStyles.overlay}>
+          <Text style={[hpBarStyles.text, { color: Colors.purple }]}>{current}/{max}</Text>
+        </View>
       </View>
     </View>
   );
 }
 
 const hpBarStyles = StyleSheet.create({
-  bg: { height: 18, backgroundColor: Colors.bgSecondary, borderWidth: 1, borderColor: Colors.borderDim, position: 'relative' },
+  wrapper: { flexDirection: 'row', alignSelf: 'stretch', alignItems: 'center', gap: 4 },
+  barLabel: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, width: 16, textAlign: 'center' },
+  bg: {
+    flex: 1, height: 22, backgroundColor: Colors.bgSecondary,
+    borderWidth: 1, borderColor: Colors.borderDim, overflow: 'hidden',
+  },
   fill: { height: '100%', position: 'absolute', left: 0, top: 0 },
+  highlight: { position: 'absolute', left: 0, right: 0, top: 0, height: 3, backgroundColor: 'rgba(255,255,255,0.12)' },
   overlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
-  text: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs },
+  text: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.text },
 });
 
 function buildLogMessage(entry: BattleLogEntry, playerName: string, opponentName: string): string {
@@ -247,7 +268,7 @@ export function BattleScreen() {
           <Text style={styles.fighterIcon}>⚔</Text>
           <Text style={styles.fighterName} numberOfLines={1}>{character.name}</Text>
           <Text style={styles.fighterLevel}>Lv.{character.level}</Text>
-          <HpBar current={finalPlayerHp} max={playerStats.maxHp} color={Colors.text} />
+          <HpBar current={finalPlayerHp} max={playerStats.maxHp} />
           {mode === 'manual' && <MpBar current={manualState.playerMp} max={playerStats.maxMp} />}
           <Text style={styles.statsText}>ATK {playerStats.attack} / DEF {playerStats.defense}</Text>
         </View>
@@ -262,7 +283,7 @@ export function BattleScreen() {
           <Text style={styles.fighterIcon}>👹</Text>
           <Text style={styles.fighterName} numberOfLines={1}>{opponent.name}</Text>
           <Text style={styles.fighterLevel}>Lv.{opponent.level}</Text>
-          <HpBar current={finalOpponentHp} max={opponent.hp} color={Colors.text} />
+          <HpBar current={finalOpponentHp} max={opponent.hp} />
           <Text style={styles.statsText}>ATK {opponent.attack} / DEF {opponent.defense}</Text>
         </View>
       </View>
@@ -284,9 +305,11 @@ export function BattleScreen() {
         <View style={styles.actionArea}>
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.actionBtn} onPress={() => handleManualAction('attack')}>
+              <Text style={styles.actionBtnIcon}>⚔️</Text>
               <Text style={styles.actionBtnLabel}>通常攻撃</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={() => handleManualAction('defend')}>
+              <Text style={styles.actionBtnIcon}>🛡️</Text>
               <Text style={styles.actionBtnLabel}>防御</Text>
               <Text style={styles.actionBtnSub}>(-50%被ダメ)</Text>
             </TouchableOpacity>
@@ -311,8 +334,11 @@ export function BattleScreen() {
                     onPress={() => canUse && handleManualAction('skill', skillId as SkillId)}
                     disabled={!canUse}
                   >
+                    <Text style={[styles.skillMenuIcon, !canUse && styles.disabledText]}>
+                      {SKILL_ICONS[skillId as SkillId] ?? '✦'}
+                    </Text>
                     <Text style={[styles.skillMenuName, !canUse && styles.disabledText]}>{skill.name}</Text>
-                    <Text style={[styles.skillMenuMp, !canUse && styles.disabledText]}>MP:{skill.mpCost}</Text>
+                    <Text style={[styles.skillMenuMp, !canUse && styles.disabledText]}>MP {skill.mpCost}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -385,8 +411,9 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', gap: Spacing.sm },
   actionBtn: {
     flex: 1, backgroundColor: Colors.bgCard, borderWidth: 2, borderColor: Colors.border,
-    padding: Spacing.sm, alignItems: 'center',
+    padding: Spacing.sm, alignItems: 'center', gap: 2,
   },
+  actionBtnIcon: { fontSize: 20 },
   actionBtnLabel: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.md, color: Colors.text },
   actionBtnSub: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim },
   skillToggleBtn: {
@@ -397,10 +424,12 @@ const styles = StyleSheet.create({
   skillToggleText: { fontFamily: Fonts.mono, fontSize: Fonts.size.sm, color: Colors.text },
   skillMenu: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
   skillMenuBtn: {
-    flex: 1, minWidth: '30%', backgroundColor: Colors.bgCard, borderWidth: 1, borderColor: Colors.blue,
-    padding: Spacing.xs, alignItems: 'center',
+    flex: 1, minWidth: '30%', minHeight: 60, backgroundColor: Colors.bgCard,
+    borderWidth: 1, borderColor: Colors.blue,
+    padding: Spacing.xs, alignItems: 'center', justifyContent: 'center', gap: 2,
   },
   skillMenuBtnDisabled: { borderColor: Colors.borderDim },
+  skillMenuIcon: { fontSize: 18 },
   skillMenuName: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.text },
   skillMenuMp: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.purple },
   disabledText: { color: Colors.textDim },
