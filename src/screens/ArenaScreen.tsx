@@ -9,6 +9,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useBattleStore } from '../store/useBattleStore';
 import { useCharacterStore } from '../store/useCharacterStore';
+import { useInventoryStore } from '../store/useInventoryStore';
+import { calculatePlayerStats } from '../utils/battleCalculator';
 import {
   OPPONENTS_BY_RANK,
   ARENA_RANK_NAMES,
@@ -62,6 +64,9 @@ export function ArenaScreen() {
   const losses = useBattleStore(s => s.losses);
   const arenaCoins = useBattleStore(s => s.arenaCoins);
   const character = useCharacterStore(s => s.character);
+  const totalAttack = useInventoryStore(s => s.getTotalAttack());
+  const totalDefense = useInventoryStore(s => s.getTotalDefense());
+  const playerStats = calculatePlayerStats(character.level, totalAttack, totalDefense);
 
   const opponents = OPPONENTS_BY_RANK[arenaRank];
   const rankIndex = ARENA_RANK_ORDER.indexOf(arenaRank);
@@ -99,7 +104,7 @@ export function ArenaScreen() {
           <Text style={[styles.wlText, { color: Colors.red }]}>負: {losses}</Text>
           <Text style={styles.wlSep}>|</Text>
           <Text style={styles.wlText}>
-            {character.level}Lv · ATK {character.level * 3 + 5}+
+            {character.level}Lv · ATK {playerStats.attack} / DEF {playerStats.defense}
           </Text>
         </View>
 
