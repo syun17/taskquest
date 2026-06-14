@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Alert,
 } from 'react-native';
 import { useQuestStore } from '../store/useQuestStore';
+import { useCharacterStore } from '../store/useCharacterStore';
+import { useDailyQuestStore } from '../store/useDailyQuestStore';
 import { DifficultyBadge } from '../components/common/DifficultyBadge';
 import { GuildButton } from '../components/common/GuildButton';
 import { PixelBorder } from '../components/common/PixelBorder';
@@ -23,6 +25,14 @@ type SortOrder = 'new' | 'old' | 'diffHigh' | 'diffLow';
 
 const DIFF_RANK: Record<QuestDifficulty, number> = { F: 0, E: 1, D: 2, C: 3, B: 4, A: 5, S: 6 };
 
+function formatTimeLeft(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 export function QuestBoardScreen() {
   const quests = useQuestStore(s => s.quests);
   const availableQuests = quests.filter(q => q.status === 'available');
@@ -30,6 +40,26 @@ export function QuestBoardScreen() {
   const addQuest = useQuestStore(s => s.addQuest);
   const editQuest = useQuestStore(s => s.editQuest);
   const deleteQuest = useQuestStore(s => s.deleteQuest);
+
+  const guildRank = useCharacterStore(s => s.character.guildRank);
+  const dailyQuests = useDailyQuestStore(s => s.dailyQuests);
+  const refreshIfNeeded = useDailyQuestStore(s => s.refreshIfNeeded);
+  const getTimeUntilReset = useDailyQuestStore(s => s.getTimeUntilReset);
+  const [timeLeft, setTimeLeft] = useState('');
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    refreshIfNeeded(guildRank);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      setTimeLeft(formatTimeLeft(getTimeUntilReset()));
+    }, 1000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // フィルタ・ソート
   const [filterDiff, setFilterDiff] = useState<QuestDifficulty | null>(null);
@@ -151,6 +181,35 @@ export function QuestBoardScreen() {
   return (
     <View style={styles.screen}>
       <Text style={styles.header}>【 クエスト掲示板 】</Text>
+
+      {/* デイリークエスト */}
+      {dailyQuests.length > 0 && (
+        <PixelBorder style={styles.dailySection} color={Colors.gold}>
+          <View style={styles.dailyHeader}>
+            <Text style={styles.dailyTitle}>【 デイリークエスト 】</Text>
+            <Text style={styles.dailyReset}>リセット: {timeLeft}</Text>
+          </View>
+          <View style={styles.dailyCards}>
+            {dailyQuests.map(dq => (
+              <View
+                key={dq.id}
+                style={[styles.dailyCard, dq.isCompleted && styles.dailyCardDone]}
+              >
+                <DifficultyBadge difficulty={dq.difficulty} />
+                <Text style={[styles.dailyCardTitle, dq.isCompleted && styles.dailyCardTitleDone]} numberOfLines={1}>
+                  {dq.isCompleted ? '✓ ' : ''}{dq.title}
+                </Text>
+                <Text style={styles.dailyCardDesc} numberOfLines={2}>{dq.description}</Text>
+                <Text style={styles.dailyCardProgress}>
+                  {dq.progress}/{dq.goalCount}
+                </Text>
+                <Text style={[styles.dailyCardReward, { color: Colors.green }]}>EXP +{dq.reward.exp}</Text>
+                <Text style={[styles.dailyCardReward, { color: Colors.gold }]}>G +{dq.reward.gold}</Text>
+              </View>
+            ))}
+          </View>
+        </PixelBorder>
+      )}
 
       {/* フィルタ・ソートバー */}
       <View style={styles.controlBar}>
@@ -399,6 +458,22 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingBottom: Spacing.sm,
   },
+  dailySection: { marginHorizontal: Spacing.lg, marginBottom: Spacing.sm, gap: Spacing.sm },
+  dailyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  dailyTitle: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.sm, color: Colors.gold, letterSpacing: 1 },
+  dailyReset: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim },
+  dailyCards: { flexDirection: 'row', gap: Spacing.xs },
+  dailyCard: {
+    flex: 1, borderWidth: 1, borderColor: Colors.borderDim,
+    padding: Spacing.xs, gap: 2, alignItems: 'center',
+    backgroundColor: Colors.bgSecondary,
+  },
+  dailyCardDone: { borderColor: Colors.green + '66', backgroundColor: Colors.green + '11' },
+  dailyCardTitle: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.text, textAlign: 'center' },
+  dailyCardTitleDone: { color: Colors.textDim },
+  dailyCardDesc: { fontFamily: Fonts.mono, fontSize: 9, color: Colors.textDim, textAlign: 'center', lineHeight: 12 },
+  dailyCardProgress: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.orange },
+  dailyCardReward: { fontFamily: Fonts.mono, fontSize: 9 },
   controlBar: { paddingHorizontal: Spacing.sm, paddingBottom: Spacing.xs },
   filterScroll: { marginBottom: 4 },
   filterBtn: {

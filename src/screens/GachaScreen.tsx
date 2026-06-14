@@ -2,12 +2,15 @@
 import {
   View,
   Text,
+  Image,
   ScrollView,
   StyleSheet,
   Alert,
 } from 'react-native';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { useInventoryStore } from '../store/useInventoryStore';
+import { useAchievementStore } from '../store/useAchievementStore';
+import { ACHIEVEMENTS } from '../constants/achievementData';
 import { PixelBorder } from '../components/common/PixelBorder';
 import { GuildButton } from '../components/common/GuildButton';
 import { RarityBadge } from '../components/common/RarityBadge';
@@ -27,9 +30,13 @@ const TYPE_LABELS: Record<string, string> = {
 export function GachaScreen() {
   const character = useCharacterStore(s => s.character);
   const spendGold = useCharacterStore(s => s.spendGold);
+  const setTitle = useCharacterStore(s => s.setTitle);
   const rollGachaFn = useInventoryStore(s => s.rollGacha);
+  const gachaPityCount = useInventoryStore(s => s.gachaPityCount);
+  const gachaHardPityCount = useInventoryStore(s => s.gachaHardPityCount);
 
   const [lastResult, setLastResult] = useState<Item | null>(null);
+  const [triggeredPity, setTriggeredPity] = useState<'epic' | 'legendary' | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const isMountedRef = useRef(true);
   useEffect(() => { return () => { isMountedRef.current = false; }; }, []);
@@ -37,6 +44,9 @@ export function GachaScreen() {
   const canRoll = character.gold >= GACHA_COST;
   const rates = GACHA_RATES_BY_RANK[character.guildRank];
   const commonRate = 100 - rates.legendary - rates.epic - rates.rare;
+
+  const epicPityLeft = 20 - gachaPityCount;
+  const legendaryPityLeft = 50 - gachaHardPityCount;
 
   const handleRoll = () => {
     if (character.gold < GACHA_COST) {
@@ -50,9 +60,20 @@ export function GachaScreen() {
     setIsRolling(true);
     setTimeout(() => {
       if (!isMountedRef.current) { return; }
-      const item = rollGachaFn(character.guildRank);
-      setLastResult(item);
+      const result = rollGachaFn(character.guildRank);
+      setLastResult(result.item);
+      setTriggeredPity(result.triggeredPity);
       setIsRolling(false);
+      if (result.item.rarity === 'legendary') {
+        const unlocked = useAchievementStore.getState().unlock('get_legendary');
+        if (unlocked) {
+          const ach = ACHIEVEMENTS.get_legendary;
+          setTimeout(() => {
+            Alert.alert('🏆 実績解除！', `「${ach.name}」\n${ach.description}`);
+            if (ach.unlocksTitle) setTitle(ach.unlocksTitle);
+          }, 500);
+        }
+      }
     }, 600);
   };
 
@@ -104,6 +125,16 @@ export function GachaScreen() {
       <PixelBorder style={styles.machine} color={Colors.gold}>
         <Text style={styles.machineTitle}>★ ギルド宝箱 ★</Text>
 
+        {/* 天井カウンター */}
+        <View style={styles.pityRow}>
+          <Text style={[styles.pityText, { color: Colors.rarityEpic }]}>
+            エピック保証: あと {epicPityLeft} 回
+          </Text>
+          <Text style={[styles.pityText, { color: Colors.rarityLegendary }]}>
+            レジェンド保証: あと {legendaryPityLeft} 回
+          </Text>
+        </View>
+
         {isRolling ? (
           <View style={styles.rollingBox}>
             <Text style={styles.rollingText}>???</Text>
@@ -111,6 +142,9 @@ export function GachaScreen() {
           </View>
         ) : lastResult ? (
           <View style={styles.resultBox}>
+            {triggeredPity && (
+              <Text style={styles.pityTriggered}>【 天井発動！ 】</Text>
+            )}
             <RarityBadge rarity={lastResult.rarity} showLabel />
             <Text style={[styles.resultName, { color: rarityColors[lastResult.rarity] }]}>
               {lastResult.name}
@@ -132,7 +166,7 @@ export function GachaScreen() {
           </View>
         ) : (
           <View style={styles.placeholderBox}>
-            <Text style={styles.placeholderIcon}>🎲</Text>
+            <Image source={require('../assets/icons/chest_closed.png')} style={styles.placeholderIconImg} />
             <Text style={styles.placeholderText}>ガチャを引いて装備を入手しよう！</Text>
           </View>
         )}
@@ -272,7 +306,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.sm,
   },
-  placeholderIcon: { fontSize: 48 },
+  placeholderIconImg: { width: 64, height: 64, resizeMode: 'contain' },
   placeholderText: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.sm,
@@ -280,6 +314,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   rollBtn: { alignSelf: 'stretch' },
+  pityRow: { gap: 2, alignItems: 'center' },
+  pityText: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, letterSpacing: 1 },
+  pityTriggered: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.lg, color: Colors.gold, letterSpacing: 2 },
   ratesCard: { gap: Spacing.sm },
   ratesTitle: {
     fontFamily: Fonts.monoBold,

@@ -22,7 +22,16 @@ const initialCharacter: Character = {
   jobId: null,
   incarnationCount: 0,
   incarnationBonus: { atkBonus: 0, defBonus: 0 },
+  questStreak: 0,
+  maxQuestStreak: 0,
 };
+
+export function getStreakMultiplier(streak: number): number {
+  if (streak >= 10) return 2.0;
+  if (streak >= 5) return 1.5;
+  if (streak >= 3) return 1.2;
+  return 1.0;
+}
 
 interface CharacterStore {
   character: Character;
@@ -40,6 +49,8 @@ interface CharacterStore {
   unequipSkill: (skillId: SkillId) => void;
   setJob: (jobId: JobId) => boolean;
   incarnate: () => boolean;
+  incrementStreak: () => void;
+  resetStreak: () => void;
 }
 
 export const useCharacterStore = create<CharacterStore>((set, get) => ({
@@ -64,6 +75,8 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
           jobId: saved.jobId ?? null,
           incarnationCount: saved.incarnationCount ?? 0,
           incarnationBonus: saved.incarnationBonus ?? { atkBonus: 0, defBonus: 0 },
+          questStreak: saved.questStreak ?? 0,
+          maxQuestStreak: saved.maxQuestStreak ?? 0,
         };
         set({ character, isLoaded: true });
       } else {
@@ -229,7 +242,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       expToNext: getExpToNext(1),
       gold: 0,
       guildRank: 'F',
-      title: GUILD_RANK_NAMES['F'],
+      title: GUILD_RANK_NAMES.F,
       incarnationCount: character.incarnationCount + 1,
       incarnationBonus: newBonus,
       skillPoints: 0,
@@ -237,5 +250,25 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     set({ character: updated });
     save(updated);
     return true;
+  },
+
+  incrementStreak: () => {
+    const { character, save } = get();
+    const newStreak = character.questStreak + 1;
+    const updated: Character = {
+      ...character,
+      questStreak: newStreak,
+      maxQuestStreak: Math.max(character.maxQuestStreak, newStreak),
+    };
+    set({ character: updated });
+    save(updated);
+  },
+
+  resetStreak: () => {
+    const { character, save } = get();
+    if (character.questStreak === 0) return;
+    const updated: Character = { ...character, questStreak: 0 };
+    set({ character: updated });
+    save(updated);
   },
 }));

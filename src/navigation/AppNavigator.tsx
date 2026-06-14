@@ -29,8 +29,6 @@ const tabStyles = StyleSheet.create({
     height: 3,
     backgroundColor: Colors.gold,
   },
-  icon: { fontSize: 22, opacity: 0.4 },
-  iconFocused: { opacity: 1 },
   iconImage: { width: 28, height: 28, opacity: 0.4 },
   iconImageFocused: { opacity: 1 },
   headerTitle: {
@@ -43,15 +41,6 @@ const tabStyles = StyleSheet.create({
 
 function HeaderTitle({ title }: { title: string }) {
   return <Text style={tabStyles.headerTitle}>{title}</Text>;
-}
-
-function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
-  return (
-    <View style={tabStyles.iconWrapper}>
-      {focused && <View style={tabStyles.activeLine} />}
-      <Text style={[tabStyles.icon, focused && tabStyles.iconFocused]}>{icon}</Text>
-    </View>
-  );
 }
 
 function TabIconImage({ source, focused }: { source: number; focused: boolean }) {
@@ -126,7 +115,7 @@ export function AppNavigator() {
           component={CharacterScreen}
           options={{
             title: '[ キャラ ]',
-            tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIconImage source={require('../assets/icons/character.png')} focused={focused} />,
           }}
         />
         <Tab.Screen
@@ -142,7 +131,7 @@ export function AppNavigator() {
           component={ArenaNavigator}
           options={{
             headerShown: false,
-            tabBarIcon: ({ focused }) => <TabIcon icon="🏟" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIconImage source={require('../assets/icons/arena.png')} focused={focused} />,
           }}
         />
       </Tab.Navigator>

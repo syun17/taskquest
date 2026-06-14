@@ -1,6 +1,13 @@
 import { BattleLogEntry, JobId, ManualBattleState, Opponent, SkillId } from '../types';
 import { JOB_DATA, SKILLS } from '../constants/gameData';
 
+const CRIT_CHANCE = 0.10;
+const CRIT_MULTIPLIER = 1.5;
+const EVADE_CHANCE = 0.05;
+
+function rollCritical(): boolean { return Math.random() < CRIT_CHANCE; }
+function rollEvasion(): boolean { return Math.random() < EVADE_CHANCE; }
+
 export interface PlayerBattleStats {
   maxHp: number;
   attack: number;
@@ -51,13 +58,23 @@ export function simulateBattle(
 
   while (playerHp > 0 && opponentHp > 0 && turn <= 30) {
     const playerAttack = () => {
+      if (rollEvasion()) {
+        log.push({ turn, attacker: 'player', damage: 0, playerHp, opponentHp, actionType: 'attack', isEvaded: true });
+        return;
+      }
+      const isCritical = rollCritical();
       const variance = Math.floor(Math.random() * 7) - 3;
-      const dmg = Math.max(1, player.attack - opponent.defense + variance);
+      let dmg = Math.max(1, player.attack - opponent.defense + variance);
+      if (isCritical) dmg = Math.floor(dmg * CRIT_MULTIPLIER);
       opponentHp = Math.max(0, opponentHp - dmg);
-      log.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, actionType: 'attack' });
+      log.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, actionType: 'attack', isCritical });
     };
 
     const opponentAttack = () => {
+      if (rollEvasion()) {
+        log.push({ turn, attacker: 'opponent', damage: 0, playerHp, opponentHp, isEvaded: true });
+        return;
+      }
       const variance = Math.floor(Math.random() * 7) - 3;
       const dmg = Math.max(1, opponent.attack - player.defense + variance);
       playerHp = Math.max(0, playerHp - dmg);
@@ -114,29 +131,51 @@ export function simulateBattleWithSkills(
         const sk = SKILLS[chosenSkillId];
         playerMp = Math.max(0, playerMp - sk.mpCost);
         if (sk.effect.type === 'damage') {
+          if (rollEvasion()) {
+            log.push({ turn, attacker: 'player', damage: 0, playerHp, opponentHp, skillUsed: chosenSkillId, actionType: 'skill', isEvaded: true });
+            return;
+          }
+          const isCritical = rollCritical();
           const variance = Math.floor(Math.random() * 7) - 3;
-          const dmg = Math.max(1, Math.floor(player.attack * sk.effect.power * skillPowerMult) - opponent.defense + variance);
+          let dmg = Math.max(1, Math.floor(player.attack * sk.effect.power * skillPowerMult) - opponent.defense + variance);
+          if (isCritical) dmg = Math.floor(dmg * CRIT_MULTIPLIER);
           opponentHp = Math.max(0, opponentHp - dmg);
-          log.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, skillUsed: chosenSkillId, actionType: 'skill' });
+          log.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, skillUsed: chosenSkillId, actionType: 'skill', isCritical });
         } else if (sk.effect.type === 'heal') {
           const healAmt = Math.floor(sk.effect.power * skillPowerMult);
           playerHp = Math.min(player.maxHp, playerHp + healAmt);
           log.push({ turn, attacker: 'player', damage: 0, playerHp, opponentHp, skillUsed: chosenSkillId, actionType: 'heal', healAmount: healAmt });
         } else {
+          if (rollEvasion()) {
+            log.push({ turn, attacker: 'player', damage: 0, playerHp, opponentHp, skillUsed: chosenSkillId, actionType: 'skill', isEvaded: true });
+            return;
+          }
+          const isCritical = rollCritical();
           const variance = Math.floor(Math.random() * 7) - 3;
-          const dmg = Math.max(1, player.attack - opponent.defense + variance);
+          let dmg = Math.max(1, player.attack - opponent.defense + variance);
+          if (isCritical) dmg = Math.floor(dmg * CRIT_MULTIPLIER);
           opponentHp = Math.max(0, opponentHp - dmg);
-          log.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, skillUsed: chosenSkillId, actionType: 'skill' });
+          log.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, skillUsed: chosenSkillId, actionType: 'skill', isCritical });
         }
       } else {
+        if (rollEvasion()) {
+          log.push({ turn, attacker: 'player', damage: 0, playerHp, opponentHp, actionType: 'attack', isEvaded: true });
+          return;
+        }
+        const isCritical = rollCritical();
         const variance = Math.floor(Math.random() * 7) - 3;
-        const dmg = Math.max(1, player.attack - opponent.defense + variance);
+        let dmg = Math.max(1, player.attack - opponent.defense + variance);
+        if (isCritical) dmg = Math.floor(dmg * CRIT_MULTIPLIER);
         opponentHp = Math.max(0, opponentHp - dmg);
-        log.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, actionType: 'attack' });
+        log.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, actionType: 'attack', isCritical });
       }
     };
 
     const opponentTurn = () => {
+      if (rollEvasion()) {
+        log.push({ turn, attacker: 'opponent', damage: 0, playerHp, opponentHp, isEvaded: true });
+        return;
+      }
       const variance = Math.floor(Math.random() * 7) - 3;
       const dmg = Math.max(1, opponent.attack - player.defense + variance);
       playerHp = Math.max(0, playerHp - dmg);
@@ -172,11 +211,17 @@ export function executePlayerAction(
   const newLog = [...state.log];
 
   if (action === 'attack') {
-    const variance = Math.floor(Math.random() * 7) - 3;
-    const effectiveDef = Math.max(0, opponent.defense - debuffOpponentDef);
-    const dmg = Math.max(1, player.attack - effectiveDef + variance);
-    opponentHp = Math.max(0, opponentHp - dmg);
-    newLog.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, actionType: 'attack' });
+    if (rollEvasion()) {
+      newLog.push({ turn, attacker: 'player', damage: 0, playerHp, opponentHp, actionType: 'attack', isEvaded: true });
+    } else {
+      const isCritical = rollCritical();
+      const variance = Math.floor(Math.random() * 7) - 3;
+      const effectiveDef = Math.max(0, opponent.defense - debuffOpponentDef);
+      let dmg = Math.max(1, player.attack - effectiveDef + variance);
+      if (isCritical) dmg = Math.floor(dmg * CRIT_MULTIPLIER);
+      opponentHp = Math.max(0, opponentHp - dmg);
+      newLog.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, actionType: 'attack', isCritical });
+    }
   } else if (action === 'defend') {
     newLog.push({ turn, attacker: 'player', damage: 0, playerHp, opponentHp, actionType: 'defend' });
   } else if (action === 'skill' && skillId) {
@@ -185,11 +230,17 @@ export function executePlayerAction(
       playerMp = Math.max(0, playerMp - sk.mpCost);
       const eff = sk.effect;
       if (eff.type === 'damage') {
-        const variance = Math.floor(Math.random() * 7) - 3;
-        const effectiveDef = Math.max(0, opponent.defense - debuffOpponentDef);
-        const dmg = Math.max(1, Math.floor(player.attack * eff.power * skillPowerMult) - effectiveDef + variance);
-        opponentHp = Math.max(0, opponentHp - dmg);
-        newLog.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, skillUsed: skillId, actionType: 'skill' });
+        if (rollEvasion()) {
+          newLog.push({ turn, attacker: 'player', damage: 0, playerHp, opponentHp, skillUsed: skillId, actionType: 'skill', isEvaded: true });
+        } else {
+          const isCritical = rollCritical();
+          const variance = Math.floor(Math.random() * 7) - 3;
+          const effectiveDef = Math.max(0, opponent.defense - debuffOpponentDef);
+          let dmg = Math.max(1, Math.floor(player.attack * eff.power * skillPowerMult) - effectiveDef + variance);
+          if (isCritical) dmg = Math.floor(dmg * CRIT_MULTIPLIER);
+          opponentHp = Math.max(0, opponentHp - dmg);
+          newLog.push({ turn, attacker: 'player', damage: dmg, playerHp, opponentHp, skillUsed: skillId, actionType: 'skill', isCritical });
+        }
       } else if (eff.type === 'heal') {
         const healAmt = Math.floor(eff.power * skillPowerMult);
         playerHp = Math.min(player.maxHp, playerHp + healAmt);
@@ -216,12 +267,16 @@ export function executePlayerAction(
 
   // 敵のターン
   const isDefending = action === 'defend';
-  const effectivePDef = player.defense + buffPlayerDef;
-  const variance2 = Math.floor(Math.random() * 7) - 3;
-  let dmg2 = Math.max(1, opponent.attack - effectivePDef + variance2);
-  if (isDefending) dmg2 = Math.floor(dmg2 * 0.5);
-  playerHp = Math.max(0, playerHp - dmg2);
-  newLog.push({ turn, attacker: 'opponent', damage: dmg2, playerHp, opponentHp });
+  if (rollEvasion()) {
+    newLog.push({ turn, attacker: 'opponent', damage: 0, playerHp, opponentHp, isEvaded: true });
+  } else {
+    const effectivePDef = player.defense + buffPlayerDef;
+    const variance2 = Math.floor(Math.random() * 7) - 3;
+    let dmg2 = Math.max(1, opponent.attack - effectivePDef + variance2);
+    if (isDefending) dmg2 = Math.floor(dmg2 * 0.5);
+    playerHp = Math.max(0, playerHp - dmg2);
+    newLog.push({ turn, attacker: 'opponent', damage: dmg2, playerHp, opponentHp });
+  }
 
   // 毒ダメージ
   if (poisonTurns > 0) {

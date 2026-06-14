@@ -87,25 +87,6 @@ export interface ManualBattleState {
   hasteTurns: number;
 }
 
-export interface Character {
-  name: string;
-  level: number;
-  exp: number;
-  expToNext: number;
-  gold: number;
-  guildRank: GuildRank;
-  title: string;
-  completedQuests: number;
-  mp: number;
-  maxMp: number;
-  skillPoints: number;
-  unlockedSkills: SkillId[];
-  equippedSkills: SkillId[];
-  jobId: JobId | null;
-  incarnationCount: number;
-  incarnationBonus: { atkBonus: number; defBonus: number };
-}
-
 export interface Item {
   id: string;
   name: string;
@@ -145,6 +126,29 @@ export interface BattleLogEntry {
   skillUsed?: SkillId;
   actionType?: 'attack' | 'skill' | 'defend' | 'heal';
   healAmount?: number;
+  isCritical?: boolean;
+  isEvaded?: boolean;
+}
+
+export interface Character {
+  name: string;
+  level: number;
+  exp: number;
+  expToNext: number;
+  gold: number;
+  guildRank: GuildRank;
+  title: string;
+  completedQuests: number;
+  mp: number;
+  maxMp: number;
+  skillPoints: number;
+  unlockedSkills: SkillId[];
+  equippedSkills: SkillId[];
+  jobId: JobId | null;
+  incarnationCount: number;
+  incarnationBonus: { atkBonus: number; defBonus: number };
+  questStreak: number;
+  maxQuestStreak: number;
 }
 
 export interface BattleRecord {

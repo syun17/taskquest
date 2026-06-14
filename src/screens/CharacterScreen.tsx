@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -10,6 +11,8 @@ import {
 } from 'react-native';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { useInventoryStore } from '../store/useInventoryStore';
+import { useAchievementStore } from '../store/useAchievementStore';
+import { ACHIEVEMENTS, ACHIEVEMENT_LIST, AchievementId } from '../constants/achievementData';
 import { PixelBorder } from '../components/common/PixelBorder';
 import { ExpBar } from '../components/common/ExpBar';
 import { RarityBadge } from '../components/common/RarityBadge';
@@ -20,6 +23,31 @@ import { calculatePlayerStats } from '../utils/battleCalculator';
 import { JOB_DATA, SKILLS } from '../constants/gameData';
 import { JobSelectScreen } from './JobSelectScreen';
 import { SkillTreeScreen } from './SkillTreeScreen';
+
+const JOB_ICONS: Record<JobId, ReturnType<typeof require>> = {
+  warrior: require('../assets/icons/sword.png'),
+  mage:    require('../assets/icons/orb.png'),
+  rogue:   require('../assets/icons/dagger.png'),
+  priest:  require('../assets/icons/star.png'),
+};
+
+const ACH_ICONS: Record<AchievementId, ReturnType<typeof require>> = {
+  first_quest:       require('../assets/icons/scroll.png'),
+  quest_10:          require('../assets/icons/scroll.png'),
+  quest_50:          require('../assets/icons/scroll.png'),
+  quest_100:         require('../assets/icons/arena.png'),
+  streak_3:          require('../assets/icons/flame.png'),
+  streak_10:         require('../assets/icons/flame.png'),
+  first_battle_win:  require('../assets/icons/sword.png'),
+  battle_10_wins:    require('../assets/icons/shield.png'),
+  arena_gold_rank:   require('../assets/icons/crown.png'),
+  arena_legend_rank: require('../assets/icons/crown.png'),
+  get_legendary:     require('../assets/icons/star.png'),
+  incarnate_once:    require('../assets/icons/gem.png'),
+  guild_rank_c:      require('../assets/icons/gem.png'),
+  guild_rank_a:      require('../assets/icons/gem.png'),
+  guild_rank_s:      require('../assets/icons/star.png'),
+};
 
 const TYPE_LABELS: Record<string, string> = {
   weapon: '武器',
@@ -61,7 +89,18 @@ export function CharacterScreen() {
   const equipSkill = useCharacterStore(s => s.equipSkill);
   const unequipSkill = useCharacterStore(s => s.unequipSkill);
   const setJob = useCharacterStore(s => s.setJob);
+  const setTitle = useCharacterStore(s => s.setTitle);
   const incarnate = useCharacterStore(s => s.incarnate);
+
+  function tryUnlockChar(id: AchievementId) {
+    const unlocked = useAchievementStore.getState().unlock(id);
+    if (!unlocked) return;
+    const ach = ACHIEVEMENTS[id];
+    setTimeout(() => {
+      Alert.alert('🏆 実績解除！', `「${ach.name}」\n${ach.description}`);
+      if (ach.unlocksTitle) setTitle(ach.unlocksTitle);
+    }, 500);
+  }
 
   const totalAttack = items.filter(i => i.equipped).reduce((sum, i) => sum + (i.attack ?? 0), 0);
   const totalDefense = items.filter(i => i.equipped).reduce((sum, i) => sum + (i.defense ?? 0), 0);
@@ -71,6 +110,15 @@ export function CharacterScreen() {
   const [showSkillTree, setShowSkillTree] = useState(false);
   const [showJobSelect, setShowJobSelect] = useState(false);
   const [showReincarnateConfirm, setShowReincarnateConfirm] = useState(false);
+
+  // ギルドランク実績チェック
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (character.guildRank === 'C') tryUnlockChar('guild_rank_c');
+    if (character.guildRank === 'A') tryUnlockChar('guild_rank_a');
+    if (character.guildRank === 'S') tryUnlockChar('guild_rank_s');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [character.guildRank, isLoaded]);
 
   // 初回: 職業が未選択の場合に自動的に選択モーダルを開く
   useEffect(() => {
@@ -185,6 +233,7 @@ export function CharacterScreen() {
           onPress: () => {
             incarnate();
             Alert.alert('転生成功！', '新たな冒険の始まりです！');
+            tryUnlockChar('incarnate_once');
           },
         },
       ],
@@ -201,7 +250,7 @@ export function CharacterScreen() {
       <PixelBorder style={styles.card}>
         <View style={styles.charHeader}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{currentJob?.icon ?? '⚔'}</Text>
+            <Image source={JOB_ICONS[character.jobId ?? 'warrior']} style={styles.avatarImage} />
           </View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={styles.charName}>{character.name}</Text>
@@ -226,6 +275,16 @@ export function CharacterScreen() {
           <View style={styles.infoChip}>
             <Text style={styles.infoChipLabel}>転生</Text>
             <Text style={styles.infoChipValue}>{character.incarnationCount}回</Text>
+          </View>
+        </View>
+        <View style={styles.goldQuestRow}>
+          <View style={styles.infoChip}>
+            <Text style={styles.infoChipLabel}>STREAK</Text>
+            <Text style={[styles.infoChipValue, { color: Colors.orange }]}>{character.questStreak}連</Text>
+          </View>
+          <View style={styles.infoChip}>
+            <Text style={styles.infoChipLabel}>BEST</Text>
+            <Text style={[styles.infoChipValue, { color: Colors.textDim }]}>{character.maxQuestStreak}連</Text>
           </View>
         </View>
 
@@ -258,7 +317,7 @@ export function CharacterScreen() {
       <PixelBorder style={styles.card}>
         {currentJob ? (
           <View style={styles.jobRow}>
-            <Text style={styles.jobIcon}>{currentJob.icon}</Text>
+            <Image source={JOB_ICONS[currentJob.id]} style={styles.jobIconImage} />
             <View style={{ flex: 1 }}>
               <Text style={styles.jobName}>{currentJob.name}</Text>
               <Text style={styles.jobDesc}>{currentJob.description}</Text>
@@ -442,7 +501,35 @@ export function CharacterScreen() {
           onClose={() => setShowSkillTree(false)}
         />
       </Modal>
+
+      {/* Achievements */}
+      <AchievementsSection />
     </ScrollView>
+  );
+}
+
+function AchievementsSection() {
+  const unlockedIds = useAchievementStore(s => s.unlockedIds);
+  return (
+    <>
+      <Text style={achStyles.header}>【 実績 】</Text>
+      <View style={achStyles.grid}>
+        {ACHIEVEMENT_LIST.map(ach => {
+          const unlocked = unlockedIds.includes(ach.id);
+          return (
+            <View
+              key={ach.id}
+              style={[achStyles.badge, unlocked ? achStyles.badgeUnlocked : achStyles.badgeLocked]}
+            >
+              <Image source={ACH_ICONS[ach.id]} style={[achStyles.iconImg, !unlocked && achStyles.dimmed]} />
+              <Text style={[achStyles.name, !unlocked && achStyles.dimmed]} numberOfLines={2}>
+                {unlocked ? ach.name : '???'}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </>
   );
 }
 
@@ -462,7 +549,7 @@ const styles = StyleSheet.create({
     width: 64, height: 64, borderWidth: 2, borderColor: Colors.gold,
     alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.bgSecondary,
   },
-  avatarText: { fontSize: 32 },
+  avatarImage: { width: 48, height: 48, resizeMode: 'contain' },
   charName: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xl, color: Colors.white },
   charTitle: { fontFamily: Fonts.mono, fontSize: Fonts.size.sm, color: Colors.textDim },
   rankBadge: {
@@ -497,7 +584,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2, textAlign: 'center',
   },
   jobRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
-  jobIcon: { fontSize: 28 },
+  jobIconImage: { width: 32, height: 32, resizeMode: 'contain' },
   jobName: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.md, color: Colors.text },
   jobDesc: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim },
   noJobText: {
@@ -554,4 +641,24 @@ const styles = StyleSheet.create({
   modalStats: { flexDirection: 'row', gap: Spacing.lg },
   modalStat: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.lg },
   modalActions: { flexDirection: 'row', gap: Spacing.sm },
+});
+
+const achStyles = StyleSheet.create({
+  header: {
+    fontFamily: Fonts.monoBold, fontSize: Fonts.size.lg, color: Colors.text,
+    letterSpacing: 2, textAlign: 'center', marginTop: Spacing.md,
+  },
+  grid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl,
+  },
+  badge: {
+    width: '30%', borderWidth: 2, borderRadius: 2,
+    padding: Spacing.sm, alignItems: 'center', gap: 4, minHeight: 72, justifyContent: 'center',
+  },
+  badgeUnlocked: { borderColor: Colors.gold, backgroundColor: Colors.gold + '18' },
+  badgeLocked: { borderColor: Colors.borderDim, backgroundColor: Colors.bgSecondary },
+  iconImg: { width: 28, height: 28, resizeMode: 'contain' },
+  name: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.text, textAlign: 'center', lineHeight: 14 },
+  dimmed: { opacity: 0.4 },
 });

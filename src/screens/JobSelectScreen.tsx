@@ -2,6 +2,7 @@ import React from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   StyleSheet,
   StyleProp,
@@ -23,6 +24,13 @@ interface Props {
 }
 
 const JOB_ORDER: JobId[] = ['warrior', 'mage', 'rogue', 'priest'];
+
+const JOB_ICONS: Record<JobId, ReturnType<typeof require>> = {
+  warrior: require('../assets/icons/sword.png'),
+  mage:    require('../assets/icons/orb.png'),
+  rogue:   require('../assets/icons/dagger.png'),
+  priest:  require('../assets/icons/star.png'),
+};
 
 function formatMult(mult: number): string {
   const pct = Math.round((mult - 1) * 100);
@@ -48,7 +56,7 @@ export function JobSelectScreen({ onSelect, onClose, isInitial, currentGold, cur
           return (
             <PixelBorder key={jobId} style={StyleSheet.flatten([styles.card, isCurrent && styles.cardCurrent] as StyleProp<ViewStyle>) as ViewStyle}>
               <View style={styles.cardHeader}>
-                <Text style={styles.jobIcon}>{job.icon}</Text>
+                <Image source={JOB_ICONS[jobId]} style={styles.jobIconImg} />
                 <View style={styles.cardTitles}>
                   <Text style={styles.jobName}>{job.name}</Text>
                   {isCurrent && <Text style={styles.currentBadge}>現在の職業</Text>}
@@ -147,8 +155,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  jobIcon: {
-    fontSize: 28,
+  jobIconImg: {
+    width: 32, height: 32, resizeMode: 'contain',
     marginRight: Spacing.sm,
   },
   cardTitles: {

@@ -2,6 +2,7 @@
 import {
   View,
   Text,
+  Image,
   ScrollView,
   StyleSheet,
 } from 'react-native';
@@ -88,7 +89,7 @@ export function ArenaScreen() {
       {/* Arena Rank Card */}
       <PixelBorder style={styles.rankCard} color={rankColor}>
         <View style={styles.rankHeader}>
-          <Text style={styles.rankIcon}>⚔️</Text>
+          <Image source={require('../assets/icons/sword.png')} style={styles.rankIconImg} />
           <View style={{ flex: 1 }}>
             <Text style={styles.rankLabel}>アリーナランク</Text>
             <Text style={[styles.rankName, { color: rankColor }]}>
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
   },
   rankCard: { gap: Spacing.sm },
   rankHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  rankIcon: { fontSize: 32 },
+  rankIconImg: { width: 36, height: 36, resizeMode: 'contain' },
   rankLabel: {
     fontFamily: Fonts.mono,
     fontSize: Fonts.size.xs,

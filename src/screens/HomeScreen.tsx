@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { useQuestStore } from '../store/useQuestStore';
 import { useInventoryStore } from '../store/useInventoryStore';
@@ -23,9 +23,10 @@ export function HomeScreen() {
 
       {/* Character Status */}
       <PixelBorder style={styles.card}>
-        <Text style={styles.characterName}>
-          ⚔ {character.name}
-        </Text>
+        <View style={styles.characterNameRow}>
+          <Image source={require('../assets/icons/sword.png')} style={styles.characterNameIcon} />
+          <Text style={styles.characterName}>{character.name}</Text>
+        </View>
         <Text style={styles.title}>{character.title}</Text>
         <View style={styles.divider} />
         <ExpBar
@@ -92,7 +93,10 @@ export function HomeScreen() {
 
       {/* Guild Notice Board */}
       <PixelBorder style={styles.card}>
-        <Text style={styles.noticeBoardTitle}>📋 ギルド掲示板からのお知らせ</Text>
+        <View style={styles.noticeTitleRow}>
+          <Image source={require('../assets/icons/scroll.png')} style={styles.noticeTitleIcon} />
+          <Text style={styles.noticeBoardTitle}>ギルド掲示板からのお知らせ</Text>
+        </View>
         <Text style={styles.noticeText}>
           {character.completedQuests === 0
             ? '冒険者よ、まずは手始めにクエストを受注してみよう！'
@@ -119,6 +123,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   card: { gap: Spacing.sm },
+  characterNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  characterNameIcon: { width: 20, height: 20, resizeMode: 'contain' },
   characterName: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.xl,
@@ -180,11 +186,12 @@ const styles = StyleSheet.create({
     color: Colors.borderDim,
     fontSize: Fonts.size.xxl,
   },
+  noticeTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.sm },
+  noticeTitleIcon: { width: 18, height: 18, resizeMode: 'contain' },
   noticeBoardTitle: {
     fontFamily: Fonts.monoBold,
     fontSize: Fonts.size.sm,
     color: Colors.text,
-    marginBottom: Spacing.sm,
   },
   noticeText: {
     fontFamily: Fonts.mono,

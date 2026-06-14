@@ -2,15 +2,20 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { useInventoryStore } from '../store/useInventoryStore';
 import { useBattleStore } from '../store/useBattleStore';
+import { useAchievementStore } from '../store/useAchievementStore';
+import { ACHIEVEMENTS, AchievementId } from '../constants/achievementData';
+import { useDailyQuestStore } from '../store/useDailyQuestStore';
 import {
   calculatePlayerStats,
   executePlayerAction,
@@ -25,15 +30,15 @@ import { BattleLogEntry, BattleRecord, ManualBattleState, SkillId } from '../typ
 type Nav = StackNavigationProp<ArenaStackParamList, 'Battle'>;
 type Route = RouteProp<ArenaStackParamList, 'Battle'>;
 
-const SKILL_ICONS: Record<SkillId, string> = {
-  slash: '⚔️',
-  fireball: '🔥',
-  heal: '💚',
-  shield: '🛡️',
-  poison: '☠️',
-  haste: '⚡',
-  rend: '💢',
-  divine_light: '✨',
+const SKILL_ICONS: Record<SkillId, ReturnType<typeof require>> = {
+  slash:        require('../assets/icons/sword.png'),
+  fireball:     require('../assets/icons/flame.png'),
+  heal:         require('../assets/icons/heal.png'),
+  shield:       require('../assets/icons/shield.png'),
+  poison:       require('../assets/icons/skull.png'),
+  haste:        require('../assets/icons/bolt.png'),
+  rend:         require('../assets/icons/claw.png'),
+  divine_light: require('../assets/icons/star.png'),
 };
 
 function HpBar({ current, max }: { current: number; max: number }) {
@@ -90,15 +95,21 @@ function buildLogMessage(entry: BattleLogEntry, playerName: string, opponentName
   if (entry.actionType === 'defend') {
     return `${playerName} は防御の構えをとった！`;
   }
+  if (entry.isEvaded) {
+    const atkName = entry.attacker === 'player' ? playerName : opponentName;
+    return `${atkName} の攻撃！ → MISS！`;
+  }
   if (entry.actionType === 'skill' && entry.skillUsed) {
     const skill = SKILLS[entry.skillUsed];
     if (entry.damage === 0) {
       return `${playerName} は「${skill?.name ?? entry.skillUsed}」を使った！`;
     }
-    return `${playerName} の「${skill?.name ?? entry.skillUsed}」！ ${entry.damage} ダメージ！`;
+    const crit = entry.isCritical ? '  ★ クリティカル！' : '';
+    return `${playerName} の「${skill?.name ?? entry.skillUsed}」！ ${entry.damage} ダメージ！${crit}`;
   }
   if (entry.attacker === 'player') {
-    return `${playerName} の攻撃！ ${entry.damage} ダメージ！`;
+    const crit = entry.isCritical ? '  ★ クリティカル！' : '';
+    return `${playerName} の攻撃！ ${entry.damage} ダメージ！${crit}`;
   }
   return `${opponentName} の攻撃！ ${entry.damage} ダメージ！`;
 }
@@ -113,7 +124,18 @@ export function BattleScreen() {
   const totalDefense = useInventoryStore(s => s.getTotalDefense());
   const gainExp = useCharacterStore(s => s.gainExp);
   const gainGold = useCharacterStore(s => s.gainGold);
+  const setTitle = useCharacterStore(s => s.setTitle);
   const recordBattle = useBattleStore(s => s.recordBattle);
+
+  function tryUnlockBattle(id: AchievementId) {
+    const unlocked = useAchievementStore.getState().unlock(id);
+    if (!unlocked) return;
+    const ach = ACHIEVEMENTS[id];
+    setTimeout(() => {
+      Alert.alert('🏆 実績解除！', `「${ach.name}」\n${ach.description}`);
+      if (ach.unlocksTitle) setTitle(ach.unlocksTitle);
+    }, 500);
+  }
 
   const opponent = useMemo(() => findOpponentById(opponentId), [opponentId]);
 
@@ -133,6 +155,7 @@ export function BattleScreen() {
   const [displayOpponentHp, setDisplayOpponentHp] = useState(opponent?.hp ?? 0);
   const [showResult, setShowResult] = useState(false);
   const rewardAppliedRef = useRef(false);
+  const [flashType, setFlashType] = useState<'critical' | 'miss' | null>(null);
 
   useEffect(() => {
     if (mode !== 'auto' || showResult) return;
@@ -141,9 +164,17 @@ export function BattleScreen() {
     const timer = setTimeout(() => {
       const next = logIndex + 1;
       if (next >= log.length) { setShowResult(true); return; }
-      setDisplayPlayerHp(log[next].playerHp);
-      setDisplayOpponentHp(log[next].opponentHp);
+      const entry = log[next];
+      setDisplayPlayerHp(entry.playerHp);
+      setDisplayOpponentHp(entry.opponentHp);
       setLogIndex(next);
+      if (entry.isCritical) {
+        setFlashType('critical');
+        setTimeout(() => setFlashType(null), 700);
+      } else if (entry.isEvaded) {
+        setFlashType('miss');
+        setTimeout(() => setFlashType(null), 700);
+      }
     }, delay);
     return () => clearTimeout(timer);
   }, [logIndex, showResult, autoResult.log, mode]);
@@ -175,6 +206,23 @@ export function BattleScreen() {
   }));
   const [showSkillMenu, setShowSkillMenu] = useState(false);
   const manualResultRef = useRef<boolean | null>(null);
+
+  // MANUAL: フラッシュ監視
+  const prevManualLogLenRef = useRef(0);
+  useEffect(() => {
+    if (mode !== 'manual') return;
+    const len = manualState.log.length;
+    if (len <= prevManualLogLenRef.current) return;
+    prevManualLogLenRef.current = len;
+    const last = manualState.log[len - 1];
+    if (last?.isCritical) {
+      setFlashType('critical');
+      setTimeout(() => setFlashType(null), 700);
+    } else if (last?.isEvaded) {
+      setFlashType('miss');
+      setTimeout(() => setFlashType(null), 700);
+    }
+  }, [manualState.log, mode]);
 
   const manualDone = mode === 'manual' && (manualState.playerHp <= 0 || manualState.opponentHp <= 0 || manualState.turn > 30);
 
@@ -234,6 +282,25 @@ export function BattleScreen() {
       createdAt: Date.now(),
     };
     recordBattle(record);
+
+    if (finalWon) {
+      const battleState = useBattleStore.getState();
+      const wins = battleState.wins;
+      if (wins === 1) tryUnlockBattle('first_battle_win');
+      if (wins === 10) tryUnlockBattle('battle_10_wins');
+      if (battleState.arenaRank === 'gold') tryUnlockBattle('arena_gold_rank');
+      if (battleState.arenaRank === 'legend') tryUnlockBattle('arena_legend_rank');
+      // デイリークエスト進捗
+      const dailyRewards = useDailyQuestStore.getState().recordGoalEvent('battle_win');
+      for (const r of dailyRewards) {
+        gainExp(r.exp);
+        gainGold(r.gold);
+        setTimeout(() => {
+          Alert.alert('📅 デイリークエスト達成！', `EXP +${r.exp}  Gold +${r.gold}`);
+        }, 800);
+      }
+    }
+
     navigation.goBack();
   };
 
@@ -265,7 +332,7 @@ export function BattleScreen() {
       {/* Battle Field */}
       <View style={styles.field}>
         <View style={styles.fighter}>
-          <Text style={styles.fighterIcon}>⚔</Text>
+          <Image source={require('../assets/icons/character.png')} style={styles.fighterMonsterIcon} />
           <Text style={styles.fighterName} numberOfLines={1}>{character.name}</Text>
           <Text style={styles.fighterLevel}>Lv.{character.level}</Text>
           <HpBar current={finalPlayerHp} max={playerStats.maxHp} />
@@ -280,13 +347,25 @@ export function BattleScreen() {
         </View>
 
         <View style={styles.fighter}>
-          <Text style={styles.fighterIcon}>👹</Text>
+          <Image source={require('../assets/icons/monster.png')} style={styles.fighterMonsterIcon} />
           <Text style={styles.fighterName} numberOfLines={1}>{opponent.name}</Text>
           <Text style={styles.fighterLevel}>Lv.{opponent.level}</Text>
           <HpBar current={finalOpponentHp} max={opponent.hp} />
           <Text style={styles.statsText}>ATK {opponent.attack} / DEF {opponent.defense}</Text>
         </View>
       </View>
+
+      {/* クリティカル / ミス フラッシュ */}
+      {flashType === 'critical' && (
+        <View style={styles.flashOverlay} pointerEvents="none">
+          <Text style={styles.flashCritical}>★ CRITICAL ★</Text>
+        </View>
+      )}
+      {flashType === 'miss' && (
+        <View style={styles.flashOverlay} pointerEvents="none">
+          <Text style={styles.flashMiss}>MISS !</Text>
+        </View>
+      )}
 
       {/* Battle Log */}
       <View style={styles.logBox}>
@@ -305,11 +384,11 @@ export function BattleScreen() {
         <View style={styles.actionArea}>
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.actionBtn} onPress={() => handleManualAction('attack')}>
-              <Text style={styles.actionBtnIcon}>⚔️</Text>
+              <Image source={require('../assets/icons/sword.png')} style={styles.actionBtnIconImg} />
               <Text style={styles.actionBtnLabel}>通常攻撃</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={() => handleManualAction('defend')}>
-              <Text style={styles.actionBtnIcon}>🛡️</Text>
+              <Image source={require('../assets/icons/shield.png')} style={styles.actionBtnIconImg} />
               <Text style={styles.actionBtnLabel}>防御</Text>
               <Text style={styles.actionBtnSub}>(-50%被ダメ)</Text>
             </TouchableOpacity>
@@ -334,9 +413,10 @@ export function BattleScreen() {
                     onPress={() => canUse && handleManualAction('skill', skillId as SkillId)}
                     disabled={!canUse}
                   >
-                    <Text style={[styles.skillMenuIcon, !canUse && styles.disabledText]}>
-                      {SKILL_ICONS[skillId as SkillId] ?? '✦'}
-                    </Text>
+                    <Image
+                      source={SKILL_ICONS[skillId as SkillId]}
+                      style={[styles.skillMenuIconImg, !canUse && styles.disabledIcon]}
+                    />
                     <Text style={[styles.skillMenuName, !canUse && styles.disabledText]}>{skill.name}</Text>
                     <Text style={[styles.skillMenuMp, !canUse && styles.disabledText]}>MP {skill.mpCost}</Text>
                   </TouchableOpacity>
@@ -392,7 +472,7 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: Colors.bgCard, borderWidth: 2, borderColor: Colors.borderDim,
     padding: Spacing.sm, gap: 4, alignItems: 'center',
   },
-  fighterIcon: { fontSize: 36 },
+  fighterMonsterIcon: { width: 52, height: 52, resizeMode: 'contain' },
   fighterName: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.text, textAlign: 'center' },
   fighterLevel: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim },
   statsText: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim, textAlign: 'center' },
@@ -413,7 +493,7 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: Colors.bgCard, borderWidth: 2, borderColor: Colors.border,
     padding: Spacing.sm, alignItems: 'center', gap: 2,
   },
-  actionBtnIcon: { fontSize: 20 },
+  actionBtnIconImg: { width: 24, height: 24, resizeMode: 'contain' },
   actionBtnLabel: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.md, color: Colors.text },
   actionBtnSub: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim },
   skillToggleBtn: {
@@ -429,7 +509,8 @@ const styles = StyleSheet.create({
     padding: Spacing.xs, alignItems: 'center', justifyContent: 'center', gap: 2,
   },
   skillMenuBtnDisabled: { borderColor: Colors.borderDim },
-  skillMenuIcon: { fontSize: 18 },
+  skillMenuIconImg: { width: 22, height: 22, resizeMode: 'contain' },
+  disabledIcon: { opacity: 0.35 },
   skillMenuName: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.text },
   skillMenuMp: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.purple },
   disabledText: { color: Colors.textDim },
@@ -455,4 +536,7 @@ const styles = StyleSheet.create({
   continueBtnText: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.md, color: Colors.white, letterSpacing: 2 },
   errorText: { fontFamily: Fonts.mono, fontSize: Fonts.size.md, color: Colors.textDim, textAlign: 'center' },
   backText: { fontFamily: Fonts.mono, fontSize: Fonts.size.md, color: Colors.gold, textAlign: 'center', marginTop: Spacing.md },
+  flashOverlay: { position: 'absolute', top: 100, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
+  flashCritical: { fontFamily: Fonts.monoBold, fontSize: 28, color: Colors.gold, letterSpacing: 3, textShadowColor: '#000', textShadowOffset: { width: 1, height: 2 }, textShadowRadius: 2 },
+  flashMiss: { fontFamily: Fonts.monoBold, fontSize: 28, color: Colors.textDim, letterSpacing: 3 },
 });
