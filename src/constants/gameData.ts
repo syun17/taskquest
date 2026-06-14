@@ -1,4 +1,4 @@
-import { GuildRank, QuestDifficulty } from '../types';
+import { GuildRank, JobBonus, JobData, JobId, QuestDifficulty, Skill, SkillId, SkillTreeNode } from '../types';
 
 export const RANK_ORDER: GuildRank[] = ['F', 'E', 'D', 'C', 'B', 'A', 'S'];
 
@@ -80,6 +80,83 @@ export const DIFFICULTY_GOLD: Record<QuestDifficulty, number> = {
   B: 400,
   A: 900,
   S: 2000,
+};
+
+export const SKILLS: Record<SkillId, Skill> = {
+  slash: {
+    id: 'slash', name: '斬撃', mpCost: 10,
+    description: '力強い一撃。ダメージ1.5倍',
+    effect: { type: 'damage', power: 1.5, target: 'opponent' },
+  },
+  fireball: {
+    id: 'fireball', name: 'ファイアボール', mpCost: 20,
+    description: '炎の弾を放つ。ダメージ2.2倍',
+    effect: { type: 'damage', power: 2.2, target: 'opponent' },
+  },
+  heal: {
+    id: 'heal', name: '回復魔法', mpCost: 15,
+    description: 'HPを30回復する',
+    effect: { type: 'heal', power: 30, target: 'self' },
+  },
+  shield: {
+    id: 'shield', name: '鉄壁', mpCost: 8,
+    description: '防御力を2ターン上昇させる',
+    effect: { type: 'buff', power: 0.5, target: 'self', stat: 'defense', duration: 2 },
+  },
+  poison: {
+    id: 'poison', name: '毒の刃', mpCost: 12,
+    description: '敵を3ターン毒状態にする',
+    effect: { type: 'debuff', power: 0.15, target: 'opponent', duration: 3 },
+  },
+  haste: {
+    id: 'haste', name: '俊足', mpCost: 10,
+    description: '速度を2ターン大幅上昇させる',
+    effect: { type: 'buff', power: 1.0, target: 'self', stat: 'speed', duration: 2 },
+  },
+  rend: {
+    id: 'rend', name: '鎧砕き', mpCost: 18,
+    description: '敵の防御力を3ターン低下させる',
+    effect: { type: 'debuff', power: 0.4, target: 'opponent', stat: 'defense', duration: 3 },
+  },
+  divine_light: {
+    id: 'divine_light', name: '神聖光', mpCost: 25,
+    description: 'HPを50回復する強力な魔法',
+    effect: { type: 'heal', power: 50, target: 'self' },
+  },
+};
+
+export const SKILL_TREE: SkillTreeNode[] = [
+  { skillId: 'slash',        requiredLevel: 1,  spCost: 1 },
+  { skillId: 'shield',       requiredLevel: 2,  spCost: 1 },
+  { skillId: 'fireball',     requiredLevel: 3,  spCost: 1 },
+  { skillId: 'heal',         requiredLevel: 3,  spCost: 1 },
+  { skillId: 'rend',         requiredLevel: 5,  prerequisite: 'slash',    spCost: 2 },
+  { skillId: 'haste',        requiredLevel: 6,  prerequisite: 'shield',   spCost: 2 },
+  { skillId: 'poison',       requiredLevel: 8,  prerequisite: 'fireball', spCost: 2 },
+  { skillId: 'divine_light', requiredLevel: 15, prerequisite: 'heal',     spCost: 3 },
+];
+
+export const JOB_DATA: Record<JobId, JobData> = {
+  warrior: {
+    id: 'warrior', name: '戦士', icon: '⚔️', changeCost: 500,
+    description: 'HP・ATKに優れる近接戦闘のエキスパート',
+    bonus: { atkMult: 1.3, defMult: 1.2, spdMult: 0.9, hpMult: 1.4, mpMult: 0.7, skillPowerMult: 1.0 } as JobBonus,
+  },
+  mage: {
+    id: 'mage', name: '魔法使い', icon: '🔮', changeCost: 500,
+    description: 'MP・スキル威力が高い。HPは低め',
+    bonus: { atkMult: 0.8, defMult: 0.7, spdMult: 1.0, hpMult: 0.8, mpMult: 1.8, skillPowerMult: 1.5 } as JobBonus,
+  },
+  rogue: {
+    id: 'rogue', name: '盗賊', icon: '🗡️', changeCost: 500,
+    description: '速度特化。先制攻撃で優位に立つ',
+    bonus: { atkMult: 1.1, defMult: 0.9, spdMult: 1.5, hpMult: 1.0, mpMult: 1.0, skillPowerMult: 1.1 } as JobBonus,
+  },
+  priest: {
+    id: 'priest', name: '僧侶', icon: '✨', changeCost: 500,
+    description: '回復スキルが強化される支援型',
+    bonus: { atkMult: 0.9, defMult: 1.1, spdMult: 0.95, hpMult: 1.2, mpMult: 1.4, skillPowerMult: 1.3 } as JobBonus,
+  },
 };
 
 export const GACHA_ITEMS = [

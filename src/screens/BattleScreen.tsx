@@ -1,74 +1,112 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { useInventoryStore } from '../store/useInventoryStore';
 import { useBattleStore } from '../store/useBattleStore';
-import { calculatePlayerStats, simulateBattle } from '../utils/battleCalculator';
+import {
+  calculatePlayerStats,
+  executePlayerAction,
+  simulateBattleWithSkills,
+} from '../utils/battleCalculator';
 import { findOpponentById } from '../constants/arenaData';
+import { SKILLS } from '../constants/gameData';
 import { Colors, Fonts, Spacing } from '../constants/theme';
 import { ArenaStackParamList } from '../navigation/ArenaNavigator';
-import { BattleRecord } from '../types';
+import { BattleLogEntry, BattleRecord, ManualBattleState, SkillId } from '../types';
 
 type Nav = StackNavigationProp<ArenaStackParamList, 'Battle'>;
 type Route = RouteProp<ArenaStackParamList, 'Battle'>;
 
-function HpBar({ current, max, color }: { current: number; max: number; color: string }) {
+const SKILL_ICONS: Record<SkillId, string> = {
+  slash: '⚔️',
+  fireball: '🔥',
+  heal: '💚',
+  shield: '🛡️',
+  poison: '☠️',
+  haste: '⚡',
+  rend: '💢',
+  divine_light: '✨',
+};
+
+function HpBar({ current, max }: { current: number; max: number }) {
+  const pct = Math.max(0, Math.min(100, Math.round((current / max) * 100)));
+  const fillColor = pct > 50 ? Colors.green : pct > 25 ? Colors.orange : Colors.red;
+  return (
+    <View style={hpBarStyles.wrapper}>
+      <Text style={[hpBarStyles.barLabel, { color: fillColor }]}>HP</Text>
+      <View style={hpBarStyles.bg}>
+        <View style={[hpBarStyles.fill, { width: `${pct}%` as `${number}%`, backgroundColor: fillColor }]} />
+        <View style={hpBarStyles.highlight} />
+        <View style={hpBarStyles.overlay}>
+          <Text style={hpBarStyles.text}>{current}/{max}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function MpBar({ current, max }: { current: number; max: number }) {
   const pct = Math.max(0, Math.min(100, Math.round((current / max) * 100)));
   return (
-    <View style={hpBarStyles.bg}>
-      <View
-        style={[
-          hpBarStyles.fill,
-          {
-            width: `${pct}%` as `${number}%`,
-            backgroundColor: pct > 50 ? Colors.green : pct > 25 ? Colors.orange : Colors.red,
-          },
-        ]}
-      />
-      <View style={hpBarStyles.overlay}>
-        <Text style={[hpBarStyles.text, { color }]}>
-          {current}/{max}
-        </Text>
+    <View style={hpBarStyles.wrapper}>
+      <Text style={[hpBarStyles.barLabel, { color: Colors.purple }]}>MP</Text>
+      <View style={hpBarStyles.bg}>
+        <View style={[hpBarStyles.fill, { width: `${pct}%` as `${number}%`, backgroundColor: Colors.purple }]} />
+        <View style={hpBarStyles.highlight} />
+        <View style={hpBarStyles.overlay}>
+          <Text style={[hpBarStyles.text, { color: Colors.purple }]}>{current}/{max}</Text>
+        </View>
       </View>
     </View>
   );
 }
 
 const hpBarStyles = StyleSheet.create({
+  wrapper: { flexDirection: 'row', alignSelf: 'stretch', alignItems: 'center', gap: 4 },
+  barLabel: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, width: 16, textAlign: 'center' },
   bg: {
-    height: 20,
-    backgroundColor: Colors.bgSecondary,
-    borderWidth: 1,
-    borderColor: Colors.borderDim,
-    position: 'relative',
+    flex: 1, height: 22, backgroundColor: Colors.bgSecondary,
+    borderWidth: 1, borderColor: Colors.borderDim, overflow: 'hidden',
   },
   fill: { height: '100%', position: 'absolute', left: 0, top: 0 },
-  overlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    fontFamily: Fonts.monoBold,
-    fontSize: Fonts.size.xs,
-  },
+  highlight: { position: 'absolute', left: 0, right: 0, top: 0, height: 3, backgroundColor: 'rgba(255,255,255,0.12)' },
+  overlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
+  text: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.text },
 });
+
+function buildLogMessage(entry: BattleLogEntry, playerName: string, opponentName: string): string {
+  if (!entry) return 'バトル開始！';
+  if (entry.actionType === 'heal' && entry.healAmount) {
+    return `${playerName} は回復！ HP +${entry.healAmount}`;
+  }
+  if (entry.actionType === 'defend') {
+    return `${playerName} は防御の構えをとった！`;
+  }
+  if (entry.actionType === 'skill' && entry.skillUsed) {
+    const skill = SKILLS[entry.skillUsed];
+    if (entry.damage === 0) {
+      return `${playerName} は「${skill?.name ?? entry.skillUsed}」を使った！`;
+    }
+    return `${playerName} の「${skill?.name ?? entry.skillUsed}」！ ${entry.damage} ダメージ！`;
+  }
+  if (entry.attacker === 'player') {
+    return `${playerName} の攻撃！ ${entry.damage} ダメージ！`;
+  }
+  return `${opponentName} の攻撃！ ${entry.damage} ダメージ！`;
+}
 
 export function BattleScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { opponentId } = route.params;
+  const { opponentId, mode } = route.params;
 
   const character = useCharacterStore(s => s.character);
   const totalAttack = useInventoryStore(s => s.getTotalAttack());
@@ -80,14 +118,15 @@ export function BattleScreen() {
   const opponent = useMemo(() => findOpponentById(opponentId), [opponentId]);
 
   const playerStats = useMemo(
-    () => calculatePlayerStats(character.level, totalAttack, totalDefense),
-    [character.level, totalAttack, totalDefense],
+    () => calculatePlayerStats(character.level, totalAttack, totalDefense, character.jobId, character.incarnationBonus),
+    [character.level, totalAttack, totalDefense, character.jobId, character.incarnationBonus],
   );
 
-  const { won, log } = useMemo(
-    () => (opponent ? simulateBattle(playerStats, opponent) : { won: false, log: [] }),
-    [playerStats, opponent],
-  );
+  // ===== AUTO MODE =====
+  const autoResult = useMemo(() => {
+    if (mode !== 'auto' || !opponent) return { won: false, log: [] as BattleLogEntry[] };
+    return simulateBattleWithSkills(playerStats, opponent, character.equippedSkills, character.jobId);
+  }, [mode, playerStats, opponent, character.equippedSkills, character.jobId]);
 
   const [logIndex, setLogIndex] = useState(-1);
   const [displayPlayerHp, setDisplayPlayerHp] = useState(playerStats.maxHp);
@@ -96,24 +135,21 @@ export function BattleScreen() {
   const rewardAppliedRef = useRef(false);
 
   useEffect(() => {
-    if (showResult) {
-      return;
-    }
+    if (mode !== 'auto' || showResult) return;
+    const log = autoResult.log;
     const delay = logIndex === -1 ? 800 : 500;
     const timer = setTimeout(() => {
       const next = logIndex + 1;
-      if (next >= log.length) {
-        setShowResult(true);
-        return;
-      }
+      if (next >= log.length) { setShowResult(true); return; }
       setDisplayPlayerHp(log[next].playerHp);
       setDisplayOpponentHp(log[next].opponentHp);
       setLogIndex(next);
     }, delay);
     return () => clearTimeout(timer);
-  }, [logIndex, showResult, log]);
+  }, [logIndex, showResult, autoResult.log, mode]);
 
   const handleSkip = () => {
+    const log = autoResult.log;
     if (log.length > 0) {
       const last = log[log.length - 1];
       setDisplayPlayerHp(last.playerHp);
@@ -123,31 +159,81 @@ export function BattleScreen() {
     setShowResult(true);
   };
 
-  const handleContinue = () => {
-    if (!rewardAppliedRef.current && opponent) {
-      rewardAppliedRef.current = true;
-      const earnedExp = won ? opponent.reward.exp : 0;
-      const earnedGold = won ? opponent.reward.gold : 0;
-      const earnedCoins = won
-        ? opponent.reward.arenaCoins
-        : Math.max(1, Math.floor(opponent.reward.arenaCoins * 0.1));
+  // ===== MANUAL MODE =====
+  const [manualState, setManualState] = useState<ManualBattleState>(() => ({
+    playerHp: playerStats.maxHp,
+    opponentHp: opponent?.hp ?? 0,
+    playerMp: playerStats.maxMp,
+    turn: 1,
+    isPlayerDefending: false,
+    log: [],
+    isPlayerTurn: true,
+    buffPlayerDef: 0,
+    debuffOpponentDef: 0,
+    poisonTurns: 0,
+    hasteTurns: 0,
+  }));
+  const [showSkillMenu, setShowSkillMenu] = useState(false);
+  const manualResultRef = useRef<boolean | null>(null);
 
-      if (earnedExp > 0) { gainExp(earnedExp); }
-      if (earnedGold > 0) { gainGold(earnedGold); }
+  const manualDone = mode === 'manual' && (manualState.playerHp <= 0 || manualState.opponentHp <= 0 || manualState.turn > 30);
 
-      const record: BattleRecord = {
-        id: `battle_${Date.now()}`,
-        opponentId: opponent.id,
-        opponentName: opponent.name,
-        won,
-        earnedExp,
-        earnedGold,
-        earnedCoins,
-        battleLog: log,
-        createdAt: Date.now(),
-      };
-      recordBattle(record);
+  const handleManualAction = useCallback((action: 'attack' | 'skill' | 'defend', skillId?: SkillId) => {
+    if (!opponent || !manualState.isPlayerTurn || manualDone) return;
+    setShowSkillMenu(false);
+    const next = executePlayerAction(action, skillId ?? null, manualState, playerStats, opponent, character.jobId);
+    manualResultRef.current = null;
+    setManualState(next);
+  }, [opponent, manualState, playerStats, character.jobId, manualDone]);
+
+  // 相手ターン自動処理 (manual モード)
+  useEffect(() => {
+    if (mode !== 'manual' || manualState.isPlayerTurn || manualDone) return;
+    // isPlayerTurn = false means opponent just attacked, now back to player
+    // executePlayerAction already handles opponent turn and returns isPlayerTurn: true
+  }, [mode, manualState.isPlayerTurn, manualDone]);
+
+  const handleManualComplete = () => {
+    if (manualDone && !showResult) {
+      setShowResult(true);
     }
+  };
+
+  useEffect(() => {
+    if (mode === 'manual' && manualDone && !showResult) {
+      setShowResult(true);
+    }
+  }, [mode, manualDone, showResult]);
+
+  const handleContinue = () => {
+    if (rewardAppliedRef.current || !opponent) { navigation.goBack(); return; }
+    rewardAppliedRef.current = true;
+
+    const won = mode === 'auto' ? autoResult.won : manualState.playerHp > 0 && !manualDone || (manualState.opponentHp <= 0);
+    const finalWon = mode === 'auto' ? autoResult.won : manualState.opponentHp <= 0;
+    const log = mode === 'auto' ? autoResult.log : manualState.log;
+
+    const earnedExp = finalWon ? opponent.reward.exp : 0;
+    const earnedGold = finalWon ? opponent.reward.gold : 0;
+    const earnedCoins = finalWon
+      ? opponent.reward.arenaCoins
+      : Math.max(1, Math.floor(opponent.reward.arenaCoins * 0.1));
+
+    if (earnedExp > 0) gainExp(earnedExp);
+    if (earnedGold > 0) gainGold(earnedGold);
+
+    const record: BattleRecord = {
+      id: `battle_${Date.now()}`,
+      opponentId: opponent.id,
+      opponentName: opponent.name,
+      won: finalWon,
+      earnedExp,
+      earnedGold,
+      earnedCoins,
+      battleLog: log,
+      createdAt: Date.now(),
+    };
+    recordBattle(record);
     navigation.goBack();
   };
 
@@ -162,95 +248,133 @@ export function BattleScreen() {
     );
   }
 
-  const currentEntry = logIndex >= 0 ? log[logIndex] : null;
-  const attackMessage = currentEntry
-    ? currentEntry.attacker === 'player'
-      ? `${character.name} の攻撃！ ${currentEntry.damage} ダメージ！`
-      : `${opponent.name} の攻撃！ ${currentEntry.damage} ダメージ！`
-    : 'バトル開始！';
+  const isAutoMode = mode === 'auto';
+  const finalWon = isAutoMode ? autoResult.won : manualState.opponentHp <= 0;
+  const finalPlayerHp = isAutoMode ? displayPlayerHp : manualState.playerHp;
+  const finalOpponentHp = isAutoMode ? displayOpponentHp : manualState.opponentHp;
+  const currentTurn = isAutoMode ? (logIndex >= 0 ? autoResult.log[logIndex]?.turn : 0) : manualState.turn;
+
+  const autoEntry = isAutoMode && logIndex >= 0 ? autoResult.log[logIndex] : null;
+  const manualLastEntry = !isAutoMode && manualState.log.length > 0 ? manualState.log[manualState.log.length - 1] : null;
+  const logMessage = isAutoMode
+    ? (autoEntry ? buildLogMessage(autoEntry, character.name, opponent.name) : 'バトル開始！')
+    : (manualLastEntry ? buildLogMessage(manualLastEntry, character.name, opponent.name) : 'バトル開始！');
 
   return (
     <View style={styles.screen}>
       {/* Battle Field */}
       <View style={styles.field}>
-        {/* Player Side */}
         <View style={styles.fighter}>
           <Text style={styles.fighterIcon}>⚔</Text>
-          <Text style={styles.fighterName} numberOfLines={1}>
-            {character.name}
-          </Text>
+          <Text style={styles.fighterName} numberOfLines={1}>{character.name}</Text>
           <Text style={styles.fighterLevel}>Lv.{character.level}</Text>
-          <HpBar current={displayPlayerHp} max={playerStats.maxHp} color={Colors.text} />
-          <Text style={styles.statsText}>
-            ATK {playerStats.attack} / DEF {playerStats.defense}
-          </Text>
+          <HpBar current={finalPlayerHp} max={playerStats.maxHp} />
+          {mode === 'manual' && <MpBar current={manualState.playerMp} max={playerStats.maxMp} />}
+          <Text style={styles.statsText}>ATK {playerStats.attack} / DEF {playerStats.defense}</Text>
         </View>
 
         <View style={styles.vsBlock}>
           <Text style={styles.vsText}>VS</Text>
-          <Text style={styles.turnText}>
-            {logIndex >= 0 ? `T${log[logIndex].turn}` : ''}
-          </Text>
+          <Text style={styles.turnText}>{currentTurn > 0 ? `T${currentTurn}` : ''}</Text>
+          {mode === 'manual' && <Text style={styles.modeBadge}>MANUAL</Text>}
         </View>
 
-        {/* Opponent Side */}
         <View style={styles.fighter}>
           <Text style={styles.fighterIcon}>👹</Text>
-          <Text style={styles.fighterName} numberOfLines={1}>
-            {opponent.name}
-          </Text>
+          <Text style={styles.fighterName} numberOfLines={1}>{opponent.name}</Text>
           <Text style={styles.fighterLevel}>Lv.{opponent.level}</Text>
-          <HpBar current={displayOpponentHp} max={opponent.hp} color={Colors.text} />
-          <Text style={styles.statsText}>
-            ATK {opponent.attack} / DEF {opponent.defense}
-          </Text>
+          <HpBar current={finalOpponentHp} max={opponent.hp} />
+          <Text style={styles.statsText}>ATK {opponent.attack} / DEF {opponent.defense}</Text>
         </View>
       </View>
 
       {/* Battle Log */}
       <View style={styles.logBox}>
-        <Text style={styles.logText}>{attackMessage}</Text>
+        <Text style={styles.logText}>{logMessage}</Text>
       </View>
 
-      {/* Skip Button */}
-      {!showResult && (
+      {/* AUTO: Skip button */}
+      {isAutoMode && !showResult && (
         <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
           <Text style={styles.skipText}>▶▶ スキップ</Text>
         </TouchableOpacity>
       )}
 
+      {/* MANUAL: Action buttons */}
+      {!isAutoMode && !showResult && !manualDone && manualState.isPlayerTurn && (
+        <View style={styles.actionArea}>
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => handleManualAction('attack')}>
+              <Text style={styles.actionBtnIcon}>⚔️</Text>
+              <Text style={styles.actionBtnLabel}>通常攻撃</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => handleManualAction('defend')}>
+              <Text style={styles.actionBtnIcon}>🛡️</Text>
+              <Text style={styles.actionBtnLabel}>防御</Text>
+              <Text style={styles.actionBtnSub}>(-50%被ダメ)</Text>
+            </TouchableOpacity>
+          </View>
+          {character.equippedSkills.length > 0 && (
+            <TouchableOpacity
+              style={[styles.skillToggleBtn, showSkillMenu && styles.skillToggleBtnActive]}
+              onPress={() => setShowSkillMenu(v => !v)}
+            >
+              <Text style={styles.skillToggleText}>スキル ▾</Text>
+            </TouchableOpacity>
+          )}
+          {showSkillMenu && (
+            <View style={styles.skillMenu}>
+              {character.equippedSkills.map(skillId => {
+                const skill = SKILLS[skillId];
+                const canUse = manualState.playerMp >= skill.mpCost;
+                return (
+                  <TouchableOpacity
+                    key={skillId}
+                    style={[styles.skillMenuBtn, !canUse && styles.skillMenuBtnDisabled]}
+                    onPress={() => canUse && handleManualAction('skill', skillId as SkillId)}
+                    disabled={!canUse}
+                  >
+                    <Text style={[styles.skillMenuIcon, !canUse && styles.disabledText]}>
+                      {SKILL_ICONS[skillId as SkillId] ?? '✦'}
+                    </Text>
+                    <Text style={[styles.skillMenuName, !canUse && styles.disabledText]}>{skill.name}</Text>
+                    <Text style={[styles.skillMenuMp, !canUse && styles.disabledText]}>MP {skill.mpCost}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      )}
+
+      {!isAutoMode && !showResult && !manualDone && !manualState.isPlayerTurn && (
+        <View style={styles.waitingBox}>
+          <Text style={styles.waitingText}>相手のターン...</Text>
+        </View>
+      )}
+
       {/* Result Overlay */}
       {showResult && (
         <View style={styles.resultOverlay}>
-          <View style={[styles.resultBox, { borderColor: won ? Colors.gold : Colors.borderDim }]}>
-            <Text style={[styles.resultTitle, { color: won ? Colors.gold : Colors.textDim }]}>
-              {won ? '★ 勝　利 ★' : '　敗　北　'}
+          <View style={[styles.resultBox, { borderColor: finalWon ? Colors.gold : Colors.borderDim }]}>
+            <Text style={[styles.resultTitle, { color: finalWon ? Colors.gold : Colors.textDim }]}>
+              {finalWon ? '★ 勝　利 ★' : '　敗　北　'}
             </Text>
-
-            {won ? (
+            {finalWon ? (
               <View style={styles.rewardBlock}>
                 <Text style={styles.rewardTitle}>＝ 獲得報酬 ＝</Text>
-                <Text style={[styles.rewardItem, { color: Colors.green }]}>
-                  EXP  +{opponent.reward.exp}
-                </Text>
-                <Text style={[styles.rewardItem, { color: Colors.gold }]}>
-                  GOLD  +{opponent.reward.gold}
-                </Text>
-                <Text style={[styles.rewardItem, { color: Colors.orange }]}>
-                  コイン  +{opponent.reward.arenaCoins}
-                </Text>
+                <Text style={[styles.rewardItem, { color: Colors.green }]}>EXP  +{opponent.reward.exp}</Text>
+                <Text style={[styles.rewardItem, { color: Colors.gold }]}>GOLD  +{opponent.reward.gold}</Text>
+                <Text style={[styles.rewardItem, { color: Colors.orange }]}>コイン  +{opponent.reward.arenaCoins}</Text>
               </View>
             ) : (
               <View style={styles.rewardBlock}>
-                <Text style={styles.defeatNote}>
-                  装備を整えて再挑戦しよう
-                </Text>
+                <Text style={styles.defeatNote}>装備を整えて再挑戦しよう</Text>
                 <Text style={[styles.rewardItem, { color: Colors.orange }]}>
                   コイン  +{Math.max(1, Math.floor(opponent.reward.arenaCoins * 0.1))}（慰め）
                 </Text>
               </View>
             )}
-
             <TouchableOpacity style={styles.continueBtn} onPress={handleContinue}>
               <Text style={styles.continueBtnText}>続ける</Text>
             </TouchableOpacity>
@@ -262,155 +386,73 @@ export function BattleScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-    padding: Spacing.lg,
-    gap: Spacing.md,
-  },
-  field: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
-  },
+  screen: { flex: 1, backgroundColor: Colors.bg, padding: Spacing.lg, gap: Spacing.md },
+  field: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, marginTop: Spacing.md },
   fighter: {
-    flex: 1,
-    backgroundColor: Colors.bgCard,
-    borderWidth: 2,
-    borderColor: Colors.borderDim,
-    padding: Spacing.sm,
-    gap: 4,
-    alignItems: 'center',
+    flex: 1, backgroundColor: Colors.bgCard, borderWidth: 2, borderColor: Colors.borderDim,
+    padding: Spacing.sm, gap: 4, alignItems: 'center',
   },
   fighterIcon: { fontSize: 36 },
-  fighterName: {
-    fontFamily: Fonts.monoBold,
-    fontSize: Fonts.size.xs,
-    color: Colors.text,
-    textAlign: 'center',
-  },
-  fighterLevel: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.xs,
-    color: Colors.textDim,
-  },
-  statsText: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.xs,
-    color: Colors.textDim,
-    textAlign: 'center',
-  },
-  vsBlock: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    gap: 4,
-  },
-  vsText: {
-    fontFamily: Fonts.monoBold,
-    fontSize: Fonts.size.xl,
-    color: Colors.border,
-  },
-  turnText: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.xs,
-    color: Colors.textDim,
-  },
+  fighterName: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.text, textAlign: 'center' },
+  fighterLevel: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim },
+  statsText: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim, textAlign: 'center' },
+  vsBlock: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, gap: 4 },
+  vsText: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xl, color: Colors.border },
+  turnText: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim },
+  modeBadge: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.blue },
   logBox: {
-    backgroundColor: Colors.bgSecondary,
-    borderWidth: 2,
-    borderColor: Colors.borderDim,
-    padding: Spacing.md,
-    minHeight: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: Colors.bgSecondary, borderWidth: 2, borderColor: Colors.borderDim,
+    padding: Spacing.md, minHeight: 60, justifyContent: 'center', alignItems: 'center',
   },
-  logText: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.md,
-    color: Colors.text,
-    textAlign: 'center',
-    lineHeight: 22,
+  logText: { fontFamily: Fonts.mono, fontSize: Fonts.size.md, color: Colors.text, textAlign: 'center', lineHeight: 22 },
+  skipBtn: { alignSelf: 'center', padding: Spacing.sm },
+  skipText: { fontFamily: Fonts.mono, fontSize: Fonts.size.sm, color: Colors.textDim, letterSpacing: 1 },
+  actionArea: { gap: Spacing.sm },
+  actionRow: { flexDirection: 'row', gap: Spacing.sm },
+  actionBtn: {
+    flex: 1, backgroundColor: Colors.bgCard, borderWidth: 2, borderColor: Colors.border,
+    padding: Spacing.sm, alignItems: 'center', gap: 2,
   },
-  skipBtn: {
-    alignSelf: 'center',
-    padding: Spacing.sm,
+  actionBtnIcon: { fontSize: 20 },
+  actionBtnLabel: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.md, color: Colors.text },
+  actionBtnSub: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.textDim },
+  skillToggleBtn: {
+    backgroundColor: Colors.bgSecondary, borderWidth: 1, borderColor: Colors.borderDim,
+    padding: Spacing.sm, alignItems: 'center',
   },
-  skipText: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.sm,
-    color: Colors.textDim,
-    letterSpacing: 1,
+  skillToggleBtnActive: { borderColor: Colors.blue },
+  skillToggleText: { fontFamily: Fonts.mono, fontSize: Fonts.size.sm, color: Colors.text },
+  skillMenu: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
+  skillMenuBtn: {
+    flex: 1, minWidth: '30%', minHeight: 60, backgroundColor: Colors.bgCard,
+    borderWidth: 1, borderColor: Colors.blue,
+    padding: Spacing.xs, alignItems: 'center', justifyContent: 'center', gap: 2,
   },
+  skillMenuBtnDisabled: { borderColor: Colors.borderDim },
+  skillMenuIcon: { fontSize: 18 },
+  skillMenuName: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xs, color: Colors.text },
+  skillMenuMp: { fontFamily: Fonts.mono, fontSize: Fonts.size.xs, color: Colors.purple },
+  disabledText: { color: Colors.textDim },
+  waitingBox: { alignItems: 'center', padding: Spacing.md },
+  waitingText: { fontFamily: Fonts.mono, fontSize: Fonts.size.sm, color: Colors.textDim },
   resultOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#000000cc',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: '#000000cc', justifyContent: 'center', alignItems: 'center', padding: Spacing.xl,
   },
   resultBox: {
-    backgroundColor: Colors.bgCard,
-    borderWidth: 3,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    gap: Spacing.md,
-    width: '100%',
+    backgroundColor: Colors.bgCard, borderWidth: 3, padding: Spacing.xl,
+    alignItems: 'center', gap: Spacing.md, width: '100%',
   },
-  resultTitle: {
-    fontFamily: Fonts.monoBold,
-    fontSize: Fonts.size.xxl,
-    letterSpacing: 4,
-  },
-  rewardBlock: {
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  rewardTitle: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.sm,
-    color: Colors.textDim,
-    letterSpacing: 2,
-  },
-  rewardItem: {
-    fontFamily: Fonts.monoBold,
-    fontSize: Fonts.size.lg,
-  },
-  defeatNote: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.sm,
-    color: Colors.textDim,
-    textAlign: 'center',
-  },
+  resultTitle: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.xxl, letterSpacing: 4 },
+  rewardBlock: { alignItems: 'center', gap: Spacing.sm },
+  rewardTitle: { fontFamily: Fonts.mono, fontSize: Fonts.size.sm, color: Colors.textDim, letterSpacing: 2 },
+  rewardItem: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.lg },
+  defeatNote: { fontFamily: Fonts.mono, fontSize: Fonts.size.sm, color: Colors.textDim, textAlign: 'center' },
   continueBtn: {
-    backgroundColor: Colors.border,
-    borderWidth: 2,
-    borderColor: Colors.border,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
+    backgroundColor: Colors.border, borderWidth: 2, borderColor: Colors.border,
+    paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xl,
   },
-  continueBtnText: {
-    fontFamily: Fonts.monoBold,
-    fontSize: Fonts.size.md,
-    color: Colors.white,
-    letterSpacing: 2,
-  },
-  errorText: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.md,
-    color: Colors.textDim,
-    textAlign: 'center',
-  },
-  backText: {
-    fontFamily: Fonts.mono,
-    fontSize: Fonts.size.md,
-    color: Colors.gold,
-    textAlign: 'center',
-    marginTop: Spacing.md,
-  },
+  continueBtnText: { fontFamily: Fonts.monoBold, fontSize: Fonts.size.md, color: Colors.white, letterSpacing: 2 },
+  errorText: { fontFamily: Fonts.mono, fontSize: Fonts.size.md, color: Colors.textDim, textAlign: 'center' },
+  backText: { fontFamily: Fonts.mono, fontSize: Fonts.size.md, color: Colors.gold, textAlign: 'center', marginTop: Spacing.md },
 });

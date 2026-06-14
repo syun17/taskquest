@@ -26,7 +26,7 @@ import { Opponent } from '../types';
 
 type Nav = StackNavigationProp<ArenaStackParamList, 'ArenaHome'>;
 
-function OpponentCard({ opponent, onFight }: { opponent: Opponent; onFight: () => void }) {
+function OpponentCard({ opponent, onFightAuto, onFightManual }: { opponent: Opponent; onFightAuto: () => void; onFightManual: () => void }) {
   return (
     <PixelBorder style={styles.opponentCard} color={Colors.borderDim}>
       <View style={styles.opponentHeader}>
@@ -52,7 +52,10 @@ function OpponentCard({ opponent, onFight }: { opponent: Opponent; onFight: () =
         <Text style={[styles.rewardValue, { color: Colors.gold }]}>{opponent.reward.gold}G</Text>
         <Text style={[styles.rewardValue, { color: Colors.textDim }]}>{opponent.reward.arenaCoins}コイン</Text>
       </View>
-      <GuildButton label="挑戦する" variant="primary" onPress={onFight} />
+      <View style={styles.fightBtnRow}>
+        <GuildButton label="オート" variant="primary" onPress={onFightAuto} style={{ flex: 1 }} />
+        <GuildButton label="マニュアル" variant="ghost" onPress={onFightManual} style={{ flex: 1 }} />
+      </View>
     </PixelBorder>
   );
 }
@@ -152,7 +155,8 @@ export function ArenaScreen() {
         <OpponentCard
           key={opponent.id}
           opponent={opponent}
-          onFight={() => navigation.navigate('Battle', { opponentId: opponent.id })}
+          onFightAuto={() => navigation.navigate('Battle', { opponentId: opponent.id, mode: 'auto' })}
+          onFightManual={() => navigation.navigate('Battle', { opponentId: opponent.id, mode: 'manual' })}
         />
       ))}
     </ScrollView>
@@ -247,6 +251,7 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
     textAlign: 'center',
   },
+  fightBtnRow: { flexDirection: 'row', gap: Spacing.sm },
   opponentCard: { gap: Spacing.sm },
   opponentHeader: {
     flexDirection: 'row',

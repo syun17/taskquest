@@ -6,9 +6,11 @@ import { BattleScreen } from '../screens/BattleScreen';
 import { ArenaShopScreen } from '../screens/ArenaShopScreen';
 import { Colors, Fonts } from '../constants/theme';
 
+import { BattleMode } from '../types';
+
 export type ArenaStackParamList = {
   ArenaHome: undefined;
-  Battle: { opponentId: string };
+  Battle: { opponentId: string; mode: BattleMode };
   ArenaShop: undefined;
 };
 
