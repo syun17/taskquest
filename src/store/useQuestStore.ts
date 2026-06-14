@@ -44,8 +44,8 @@ interface QuestStore {
   isLoaded: boolean;
   load: () => Promise<void>;
   save: (quests: Quest[]) => Promise<void>;
-  addQuest: (title: string, description: string, difficulty: QuestDifficulty, conditions?: string, deadline?: string) => void;
-  editQuest: (id: string, updates: Partial<Pick<Quest, 'title' | 'description' | 'difficulty' | 'conditions' | 'deadline'>>) => void;
+  addQuest: (title: string, description: string, difficulty: QuestDifficulty, conditions?: string, deadline?: string, tags?: string[]) => void;
+  editQuest: (id: string, updates: Partial<Pick<Quest, 'title' | 'description' | 'difficulty' | 'conditions' | 'deadline' | 'tags'>>) => void;
   acceptQuest: (id: string) => void;
   completeQuest: (id: string) => { exp: number; gold: number } | null;
   abandonQuest: (id: string) => void;
@@ -79,7 +79,7 @@ export const useQuestStore = create<QuestStore>((set, get) => ({
     } catch {}
   },
 
-  addQuest: (title, description, difficulty, conditions, deadline) => {
+  addQuest: (title, description, difficulty, conditions, deadline, tags) => {
     const { quests, save } = get();
     const quest: Quest = {
       id: generateId(),
@@ -87,6 +87,7 @@ export const useQuestStore = create<QuestStore>((set, get) => ({
       description,
       conditions,
       deadline,
+      tags: tags && tags.length > 0 ? tags : undefined,
       difficulty,
       reward: { exp: DIFFICULTY_EXP[difficulty], gold: DIFFICULTY_GOLD[difficulty] },
       status: 'available',

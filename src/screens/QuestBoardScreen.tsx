@@ -33,10 +33,18 @@ export function QuestBoardScreen() {
 
   // フィルタ・ソート
   const [filterDiff, setFilterDiff] = useState<QuestDifficulty | null>(null);
+  const [filterTag, setFilterTag] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>('new');
+
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    availableQuests.forEach(q => q.tags?.forEach(t => tagSet.add(t)));
+    return Array.from(tagSet).sort();
+  }, [availableQuests]);
 
   const displayedQuests = useMemo(() => {
     let list = filterDiff ? availableQuests.filter(q => q.difficulty === filterDiff) : availableQuests;
+    if (filterTag) list = list.filter(q => q.tags?.includes(filterTag));
     return [...list].sort((a, b) => {
       switch (sortOrder) {
         case 'new': return b.createdAt - a.createdAt;
@@ -45,7 +53,7 @@ export function QuestBoardScreen() {
         case 'diffLow': return DIFF_RANK[a.difficulty] - DIFF_RANK[b.difficulty];
       }
     });
-  }, [availableQuests, filterDiff, sortOrder]);
+  }, [availableQuests, filterDiff, filterTag, sortOrder]);
 
   // 新規作成
   const [showCreate, setShowCreate] = useState(false);
@@ -54,6 +62,7 @@ export function QuestBoardScreen() {
   const [conditions, setConditions] = useState('');
   const [deadlineInput, setDeadlineInput] = useState('');
   const [difficulty, setDifficulty] = useState<QuestDifficulty>('E');
+  const [tagsInput, setTagsInput] = useState('');
 
   // 編集
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
@@ -62,6 +71,7 @@ export function QuestBoardScreen() {
   const [editConditions, setEditConditions] = useState('');
   const [editDeadline, setEditDeadline] = useState('');
   const [editDifficulty, setEditDifficulty] = useState<QuestDifficulty>('E');
+  const [editTagsInput, setEditTagsInput] = useState('');
 
   const openEdit = (quest: Quest) => {
     setEditingQuest(quest);
@@ -70,7 +80,11 @@ export function QuestBoardScreen() {
     setEditConditions(quest.conditions ?? '');
     setEditDeadline(quest.deadline ?? '');
     setEditDifficulty(quest.difficulty);
+    setEditTagsInput(quest.tags?.join(' ') ?? '');
   };
+
+  const parseTags = (input: string): string[] =>
+    input.split(/[\s,、]+/).map(t => t.trim()).filter(t => t.length > 0);
 
   const handleSaveEdit = () => {
     if (!editingQuest) return;
@@ -78,12 +92,14 @@ export function QuestBoardScreen() {
       Alert.alert('エラー', 'クエスト名を入力してください');
       return;
     }
+    const tags = parseTags(editTagsInput);
     editQuest(editingQuest.id, {
       title: editTitle.trim(),
       description: editDescription.trim(),
       difficulty: editDifficulty,
       conditions: editConditions.trim() || undefined,
       deadline: editDeadline.trim() || undefined,
+      tags: tags.length > 0 ? tags : undefined,
     });
     setEditingQuest(null);
   };
@@ -111,12 +127,14 @@ export function QuestBoardScreen() {
       Alert.alert('エラー', 'クエスト名を入力してください');
       return;
     }
-    addQuest(title.trim(), description.trim(), difficulty, conditions.trim() || undefined, deadlineInput.trim() || undefined);
+    const tags = parseTags(tagsInput);
+    addQuest(title.trim(), description.trim(), difficulty, conditions.trim() || undefined, deadlineInput.trim() || undefined, tags.length > 0 ? tags : undefined);
     setTitle('');
     setDescription('');
     setConditions('');
     setDeadlineInput('');
     setDifficulty('E');
+    setTagsInput('');
     setShowCreate(false);
   };
 
@@ -126,6 +144,7 @@ export function QuestBoardScreen() {
     setConditions('');
     setDeadlineInput('');
     setDifficulty('E');
+    setTagsInput('');
     setShowCreate(false);
   };
 
@@ -152,6 +171,25 @@ export function QuestBoardScreen() {
             </TouchableOpacity>
           ))}
         </ScrollView>
+        {allTags.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+            <TouchableOpacity
+              style={[styles.filterBtn, filterTag === null && styles.tagBtnActive]}
+              onPress={() => setFilterTag(null)}
+            >
+              <Text style={[styles.filterBtnText, filterTag === null && styles.tagBtnTextActive]}>全タグ</Text>
+            </TouchableOpacity>
+            {allTags.map(tag => (
+              <TouchableOpacity
+                key={tag}
+                style={[styles.filterBtn, filterTag === tag && styles.tagBtnActive]}
+                onPress={() => setFilterTag(filterTag === tag ? null : tag)}
+              >
+                <Text style={[styles.filterBtnText, filterTag === tag && styles.tagBtnTextActive]}>#{tag}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sortScroll}>
           {([['new', '新↓'], ['old', '古↓'], ['diffHigh', '難易度↑'], ['diffLow', '難易度↓']] as [SortOrder, string][]).map(([key, label]) => (
             <TouchableOpacity
@@ -190,6 +228,15 @@ export function QuestBoardScreen() {
               {item.deadline ? (
                 <Text style={styles.questDeadline}>⏰ 期限: {item.deadline}</Text>
               ) : null}
+              {item.tags && item.tags.length > 0 && (
+                <View style={styles.tagRow}>
+                  {item.tags.map(tag => (
+                    <TouchableOpacity key={tag} onPress={() => setFilterTag(filterTag === tag ? null : tag)}>
+                      <Text style={[styles.tagChip, filterTag === tag && styles.tagChipActive]}>#{tag}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
               <View style={styles.questFooter}>
                 <View style={styles.rewards}>
                   <Text style={styles.rewardText}>EXP +{item.reward.exp}</Text>
@@ -225,6 +272,7 @@ export function QuestBoardScreen() {
                 conditions={conditions} setConditions={setConditions}
                 deadlineInput={deadlineInput} setDeadlineInput={setDeadlineInput}
                 difficulty={difficulty} setDifficulty={setDifficulty}
+                tagsInput={tagsInput} setTagsInput={setTagsInput}
               />
               <View style={styles.modalActions}>
                 <GuildButton label="キャンセル" variant="ghost" onPress={handleCloseCreate} style={{ flex: 1 }} />
@@ -247,6 +295,7 @@ export function QuestBoardScreen() {
                 conditions={editConditions} setConditions={setEditConditions}
                 deadlineInput={editDeadline} setDeadlineInput={setEditDeadline}
                 difficulty={editDifficulty} setDifficulty={setEditDifficulty}
+                tagsInput={editTagsInput} setTagsInput={setEditTagsInput}
               />
               <View style={styles.modalActions}>
                 <GuildButton label="キャンセル" variant="ghost" onPress={() => setEditingQuest(null)} style={{ flex: 1 }} />
@@ -266,9 +315,10 @@ interface FormProps {
   conditions: string; setConditions: (v: string) => void;
   deadlineInput: string; setDeadlineInput: (v: string) => void;
   difficulty: QuestDifficulty; setDifficulty: (d: QuestDifficulty) => void;
+  tagsInput: string; setTagsInput: (v: string) => void;
 }
 
-function QuestForm({ title, setTitle, description, setDescription, conditions, setConditions, deadlineInput, setDeadlineInput, difficulty, setDifficulty }: FormProps) {
+function QuestForm({ title, setTitle, description, setDescription, conditions, setConditions, deadlineInput, setDeadlineInput, difficulty, setDifficulty, tagsInput, setTagsInput }: FormProps) {
   return (
     <>
       <Text style={styles.inputLabel}>クエスト名 *</Text>
@@ -324,6 +374,15 @@ function QuestForm({ title, setTitle, description, setDescription, conditions, s
         onChangeText={setDeadlineInput}
         placeholder="例: 2026/12/31 または「来週中」など"
         placeholderTextColor={Colors.textDim}
+      />
+      <Text style={styles.inputLabel}>タグ（任意）</Text>
+      <TextInput
+        style={styles.input}
+        value={tagsInput}
+        onChangeText={setTagsInput}
+        placeholder="例: 健康 勉強 運動（スペース・カンマ区切り）"
+        placeholderTextColor={Colors.textDim}
+        maxLength={100}
       />
     </>
   );
@@ -426,4 +485,17 @@ const styles = StyleSheet.create({
     textAlign: 'center', marginBottom: Spacing.xs,
   },
   modalActions: { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.md },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  tagChip: {
+    fontFamily: Fonts.mono,
+    fontSize: Fonts.size.xs,
+    color: Colors.textDim,
+    borderWidth: 1,
+    borderColor: Colors.borderDim,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  tagChipActive: { color: Colors.green, borderColor: Colors.green },
+  tagBtnActive: { borderColor: Colors.green, backgroundColor: Colors.green + '22' },
+  tagBtnTextActive: { color: Colors.green },
 });
