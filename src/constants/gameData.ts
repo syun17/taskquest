@@ -91,6 +91,7 @@ export const GACHA_ITEMS = [
   { name: '勇者のお守り', type: 'accessory' as const, rarity: 'rare' as const, attack: 5, defense: 5, description: '勇敢さを授ける護符' },
   { name: '魔剣オラクル', type: 'weapon' as const, rarity: 'epic' as const, attack: 45, defense: 0, description: '古代魔術で鍛えられた剣' },
   { name: '竜鱗の鎧', type: 'armor' as const, rarity: 'epic' as const, attack: 0, defense: 50, description: '竜の鱗で作られた最高の防具' },
+  { name: '魔力の指輪', type: 'accessory' as const, rarity: 'epic' as const, attack: 18, defense: 18, description: '魔力を秘めた神秘の指輪' },
   { name: '神器エクスカリバー', type: 'weapon' as const, rarity: 'legendary' as const, attack: 100, defense: 10, description: '伝説の聖剣' },
   { name: '不死の指輪', type: 'accessory' as const, rarity: 'legendary' as const, attack: 20, defense: 30, description: '着けた者に不死の力を与える' },
 ];

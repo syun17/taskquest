@@ -64,6 +64,7 @@ export function CharacterScreen() {
     const groupMap = new Map<string, SynthesisGroup>();
     for (const item of items) {
       if (item.rarity === 'legendary') continue;
+      if (item.equipped) continue;
       const key = `${item.name}__${item.rarity}`;
       const existing = groupMap.get(key);
       if (existing) {
