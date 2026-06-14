@@ -45,6 +45,7 @@ interface QuestStore {
   load: () => Promise<void>;
   save: (quests: Quest[]) => Promise<void>;
   addQuest: (title: string, description: string, difficulty: QuestDifficulty, conditions?: string, deadline?: string) => void;
+  editQuest: (id: string, updates: Partial<Pick<Quest, 'title' | 'description' | 'difficulty' | 'conditions' | 'deadline'>>) => void;
   acceptQuest: (id: string) => void;
   completeQuest: (id: string) => { exp: number; gold: number } | null;
   abandonQuest: (id: string) => void;
@@ -92,6 +93,22 @@ export const useQuestStore = create<QuestStore>((set, get) => ({
       createdAt: Date.now(),
     };
     const updated = [...quests, quest];
+    set({ quests: updated });
+    save(updated);
+  },
+
+  editQuest: (id, updates) => {
+    const { quests, save } = get();
+    const updated = quests.map(q => {
+      if (q.id !== id || q.status !== 'available') return q;
+      const difficulty = updates.difficulty ?? q.difficulty;
+      return {
+        ...q,
+        ...updates,
+        difficulty,
+        reward: { exp: DIFFICULTY_EXP[difficulty], gold: DIFFICULTY_GOLD[difficulty] },
+      };
+    });
     set({ quests: updated });
     save(updated);
   },

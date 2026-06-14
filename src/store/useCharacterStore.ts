@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Character } from '../types';
-import { getExpToNext, getRankForLevel, GUILD_RANK_NAMES } from '../constants/gameData';
+import { Character, JobId, SkillId } from '../types';
+import { getExpToNext, getRankForLevel, GUILD_RANK_NAMES, SKILL_TREE, JOB_DATA } from '../constants/gameData';
 
 const STORAGE_KEY = '@taskquest_character';
 
@@ -14,6 +14,14 @@ const initialCharacter: Character = {
   guildRank: 'F',
   title: '見習い冒険者',
   completedQuests: 0,
+  mp: 50,
+  maxMp: 50,
+  skillPoints: 0,
+  unlockedSkills: [],
+  equippedSkills: [],
+  jobId: null,
+  incarnationCount: 0,
+  incarnationBonus: { atkBonus: 0, defBonus: 0 },
 };
 
 interface CharacterStore {
@@ -27,6 +35,11 @@ interface CharacterStore {
   setName: (name: string) => void;
   setTitle: (title: string) => void;
   incrementCompletedQuests: () => void;
+  unlockSkill: (skillId: SkillId) => boolean;
+  equipSkill: (skillId: SkillId) => boolean;
+  unequipSkill: (skillId: SkillId) => void;
+  setJob: (jobId: JobId) => boolean;
+  incarnate: () => boolean;
 }
 
 export const useCharacterStore = create<CharacterStore>((set, get) => ({
@@ -38,13 +51,19 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw);
-        // 旧バージョンのデータとのマージ: 存在しないフィールドは initialCharacter の値で補完
         const character: Character = {
           ...initialCharacter,
           ...saved,
           completedQuests: typeof saved.completedQuests === 'number' && !isNaN(saved.completedQuests)
-            ? saved.completedQuests
-            : 0,
+            ? saved.completedQuests : 0,
+          mp: saved.mp ?? initialCharacter.mp,
+          maxMp: saved.maxMp ?? initialCharacter.maxMp,
+          skillPoints: saved.skillPoints ?? 0,
+          unlockedSkills: saved.unlockedSkills ?? [],
+          equippedSkills: saved.equippedSkills ?? [],
+          jobId: saved.jobId ?? null,
+          incarnationCount: saved.incarnationCount ?? 0,
+          incarnationBonus: saved.incarnationBonus ?? { atkBonus: 0, defBonus: 0 },
         };
         set({ character, isLoaded: true });
       } else {
@@ -63,7 +82,8 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
 
   gainExp: (amount: number) => {
     const { character, save } = get();
-    let { exp, level } = character;
+    let { exp, level, skillPoints } = character;
+    const prevLevel = level;
     exp += amount;
 
     while (true) {
@@ -76,14 +96,21 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       }
     }
 
+    // 2レベルごとにSP+1
+    const levelsGained = level - prevLevel;
+    const newSp = skillPoints + Math.floor(levelsGained / 2);
+
     const newRank = getRankForLevel(level);
+    const newMaxMp = 50 + level * 5;
     const updated: Character = {
       ...character,
       exp,
       level,
       expToNext: getExpToNext(level),
       guildRank: newRank,
-      title: GUILD_RANK_NAMES[newRank],
+      title: character.jobId ? character.title : GUILD_RANK_NAMES[newRank],
+      skillPoints: newSp,
+      maxMp: newMaxMp,
     };
     set({ character: updated });
     save(updated);
@@ -124,5 +151,92 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     const updated = { ...character, completedQuests: character.completedQuests + 1 };
     set({ character: updated });
     save(updated);
+  },
+
+  unlockSkill: (skillId: SkillId): boolean => {
+    const { character, save } = get();
+    const node = SKILL_TREE.find(n => n.skillId === skillId);
+    if (!node) return false;
+    if (character.level < node.requiredLevel) return false;
+    if (character.skillPoints < node.spCost) return false;
+    if (node.prerequisite && !character.unlockedSkills.includes(node.prerequisite)) return false;
+    if (character.unlockedSkills.includes(skillId)) return false;
+
+    const updated: Character = {
+      ...character,
+      skillPoints: character.skillPoints - node.spCost,
+      unlockedSkills: [...character.unlockedSkills, skillId],
+    };
+    set({ character: updated });
+    save(updated);
+    return true;
+  },
+
+  equipSkill: (skillId: SkillId): boolean => {
+    const { character, save } = get();
+    if (!character.unlockedSkills.includes(skillId)) return false;
+    if (character.equippedSkills.includes(skillId)) return false;
+    if (character.equippedSkills.length >= 3) return false;
+
+    const updated: Character = {
+      ...character,
+      equippedSkills: [...character.equippedSkills, skillId],
+    };
+    set({ character: updated });
+    save(updated);
+    return true;
+  },
+
+  unequipSkill: (skillId: SkillId) => {
+    const { character, save } = get();
+    const updated: Character = {
+      ...character,
+      equippedSkills: character.equippedSkills.filter(id => id !== skillId),
+    };
+    set({ character: updated });
+    save(updated);
+  },
+
+  setJob: (jobId: JobId): boolean => {
+    const { character, save } = get();
+    const isInitial = character.jobId === null;
+    if (!isInitial) {
+      const cost = JOB_DATA[jobId].changeCost;
+      if (character.gold < cost) return false;
+    }
+    const cost = isInitial ? 0 : JOB_DATA[jobId].changeCost;
+    const updated: Character = {
+      ...character,
+      jobId,
+      gold: character.gold - cost,
+    };
+    set({ character: updated });
+    save(updated);
+    return true;
+  },
+
+  incarnate: (): boolean => {
+    const { character, save } = get();
+    if (character.level < 50) return false;
+
+    const newBonus = {
+      atkBonus: character.incarnationBonus.atkBonus + 5,
+      defBonus: character.incarnationBonus.defBonus + 3,
+    };
+    const updated: Character = {
+      ...character,
+      level: 1,
+      exp: 0,
+      expToNext: getExpToNext(1),
+      gold: 0,
+      guildRank: 'F',
+      title: GUILD_RANK_NAMES['F'],
+      incarnationCount: character.incarnationCount + 1,
+      incarnationBonus: newBonus,
+      skillPoints: 0,
+    };
+    set({ character: updated });
+    save(updated);
+    return true;
   },
 }));
